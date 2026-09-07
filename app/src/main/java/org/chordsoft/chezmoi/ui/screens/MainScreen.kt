@@ -38,14 +38,19 @@ import org.chordsoft.chezmoi.data.model.parseGeoJsonPolygon
 import org.chordsoft.chezmoi.data.model.toLatLngList
 import org.chordsoft.chezmoi.ui.components.LocationPermissionHandler
 import org.chordsoft.chezmoi.ui.components.MapControlsOverlay
-import org.chordsoft.chezmoi.ui.components.MarkerInfoDialog
+import org.chordsoft.chezmoi.ui.dialogs.MarkerInfoDialog
 import org.chordsoft.chezmoi.ui.components.rememberCustomMarkerIcon
 import org.chordsoft.chezmoi.viewmodel.MapViewModel
+import org.chordsoft.chezmoi.viewmodel.SearchAddressViewModel
 import kotlin.time.Duration.Companion.milliseconds
 
 @OptIn(MapsComposeExperimentalApi::class, FlowPreview::class)
 @Composable
-fun MainScreen(modifier: Modifier, mapViewModel: MapViewModel) {
+fun MainScreen(
+    modifier: Modifier,
+    mapViewModel: MapViewModel,
+    searchAddressViewModel: SearchAddressViewModel,
+) {
     var locationPermission = false
     val json =
         """
@@ -1029,7 +1034,7 @@ fun MainScreen(modifier: Modifier, mapViewModel: MapViewModel) {
                 }
             }
         }
-        MapControlsOverlay(cameraPositionState, {})
+        MapControlsOverlay(searchAddressViewModel, cameraPositionState, {})
         if (showMarkerInfoDialog) {
             MarkerInfoDialog({ showMarkerInfoDialog = false }) {
                 when (markerInfoState.value.type) {

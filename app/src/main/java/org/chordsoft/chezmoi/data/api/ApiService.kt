@@ -1,5 +1,6 @@
 package org.chordsoft.chezmoi.data.api
 
+import org.chordsoft.chezmoi.data.model.Address
 import org.chordsoft.chezmoi.data.model.Cluster
 import org.chordsoft.chezmoi.data.model.HlmData
 import org.chordsoft.chezmoi.data.model.Rpls
@@ -68,4 +69,10 @@ interface ApiService {
         @Query("id")
         id: Int
     ): ApiResponse<Rpls>
+
+    @GET("search_address")
+    suspend fun searchAddress(
+        @Query("q")
+        query: String
+    ): ApiResponse<List<Address>>
 }

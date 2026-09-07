@@ -1,4 +1,4 @@
-package org.chordsoft.chezmoi.ui.components
+package org.chordsoft.chezmoi.ui.dialogs
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
