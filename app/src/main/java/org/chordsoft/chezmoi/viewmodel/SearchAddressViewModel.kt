@@ -10,14 +10,14 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.chordsoft.chezmoi.data.api.RetrofitInstance
 import org.chordsoft.chezmoi.data.model.Address
-import org.chordsoft.chezmoi.data.model.SourceState
+import org.chordsoft.chezmoi.data.sources.SourceState
 
 class SearchAddressViewModel: ViewModel() {
     private val api = RetrofitInstance.api
 
     val query = MutableStateFlow("")
 
-    private val _searchResults = MutableStateFlow< SourceState<List<Address>>>(SourceState.Empty)
+    private val _searchResults = MutableStateFlow<SourceState<List<Address>>>(SourceState.Empty)
     val searchResults: StateFlow<SourceState<List<Address>>> = _searchResults.asStateFlow()
 
     fun search() {

@@ -1,6 +1,7 @@
 package org.chordsoft.chezmoi.data.sources
 
 import android.util.Log
+import com.google.gson.JsonElement
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
@@ -13,6 +14,7 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
 import org.chordsoft.chezmoi.data.api.ApiResponse
 import org.chordsoft.chezmoi.data.model.ViewPort
+import org.maplibre.spatialk.geojson.GeoJsonObject
 import kotlin.time.Duration.Companion.milliseconds
 
 enum class ZoomLevel(val value: Int) {
@@ -22,8 +24,8 @@ enum class ZoomLevel(val value: Int) {
 }
 
 @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
-class ViewPortDataSource<T>(
-    private val apiCall: suspend (viewPort: ViewPort) -> ApiResponse<T>,
+class GeoJsonDataSource(
+    private val apiCall: suspend (viewPort: ViewPort) -> ApiResponse<JsonElement>,
     scope: CoroutineScope
 ) {
     private val viewPortFlow = MutableSharedFlow<ViewPort>(
@@ -31,8 +33,8 @@ class ViewPortDataSource<T>(
         replay = 1,
     )
 
-    private val _flow = MutableStateFlow<SourceState<T>>(SourceState.Empty)
-    val flow: StateFlow<SourceState<T>> = _flow.asStateFlow()
+    private val _flow = MutableStateFlow<SourceState<String>>(SourceState.Empty)
+    val flow: StateFlow<SourceState<String>> = _flow.asStateFlow()
 
     init {
         scope.launch {
@@ -42,9 +44,9 @@ class ViewPortDataSource<T>(
                     try {
                         _flow.value = SourceState.Loading
                         val result = apiCall(viewPort)
-                        Log.d("ARASH", result.data.toString())
-                        _flow.value = SourceState.Success(result.data)
-
+                        Log.d("APICALL", (result.data as JsonElement).toString())
+                        _flow.value = SourceState.Success(result.data.toString())
+                        Log.d("APICALL", GeoJsonObject.fromJson(result.data.toString()).toString())
                     } catch (e: Exception) {
                         Log.e("APICALL", e.message?: "unknown error")
                         _flow.value = SourceState.Error("${e.message} ${e.stackTraceToString()} ${e.cause?.message}")

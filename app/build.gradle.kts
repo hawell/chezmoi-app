@@ -58,9 +58,10 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
-
-    implementation(libs.maps.compose)
+    runtimeOnly(libs.maplibre.compose.runtime.vulkan.android)
+    implementation(libs.location.runtime.gms)
     implementation(libs.gson)
     implementation(libs.retrofit2.retrofit)
     implementation(libs.converter.gson)
+    implementation(libs.maplibre.compose)
 }

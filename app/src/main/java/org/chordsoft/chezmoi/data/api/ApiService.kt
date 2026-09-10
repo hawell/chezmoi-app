@@ -1,7 +1,7 @@
 package org.chordsoft.chezmoi.data.api
 
+import com.google.gson.JsonElement
 import org.chordsoft.chezmoi.data.model.Address
-import org.chordsoft.chezmoi.data.model.Cluster
 import org.chordsoft.chezmoi.data.model.HlmData
 import org.chordsoft.chezmoi.data.model.Rpls
 import retrofit2.http.GET
@@ -62,7 +62,7 @@ interface ApiService {
         east: Double,
         @Query("zoom")
         zoom: Float
-    ): ApiResponse<List<Cluster>>
+    ): ApiResponse<JsonElement>
 
     @GET("rpls_details")
     suspend fun getRplsDetails(

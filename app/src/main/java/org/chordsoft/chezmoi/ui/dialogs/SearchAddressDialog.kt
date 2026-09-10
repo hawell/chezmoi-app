@@ -33,7 +33,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.chordsoft.chezmoi.R
 import org.chordsoft.chezmoi.data.model.Address
-import org.chordsoft.chezmoi.data.model.SourceState
+import org.chordsoft.chezmoi.data.sources.SourceState
 import org.chordsoft.chezmoi.ui.components.LoadingCard
 import org.chordsoft.chezmoi.viewmodel.SearchAddressViewModel
 

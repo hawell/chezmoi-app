@@ -19,9 +19,6 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.ChezMoi">
 
-        <meta-data
-            android:name="com.google.android.geo.API_KEY" android:value="AIzaSyCjG0ThADY7YcKUjVZZqe293TBagzujou0"/>
-
         <activity
             android:name=".MainActivity"
             android:exported="true"

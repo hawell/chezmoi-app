@@ -5,27 +5,21 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import com.google.android.gms.maps.model.LatLng
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.chordsoft.chezmoi.data.api.RetrofitInstance
-import org.chordsoft.chezmoi.data.model.Cluster
 import org.chordsoft.chezmoi.data.model.Rpls
-import org.chordsoft.chezmoi.data.sources.SourceState
-import org.chordsoft.chezmoi.data.sources.ViewPortDataSource
+import org.chordsoft.chezmoi.data.sources.GeoJsonDataSource
 import org.chordsoft.chezmoi.data.sources.ZoomLevel
+import org.maplibre.spatialk.geojson.Position
 
 class MapViewModel: ViewModel() {
 
     data class Pin(
         val id: Int,
         val label: String,
-        val position: LatLng,
+        val position: Position,
         val count: Int
     )
 
@@ -66,46 +60,16 @@ class MapViewModel: ViewModel() {
         }
     }
 
-    private val rplsSource = ViewPortDataSource(
+    private val rplsSource = GeoJsonDataSource(
         apiCall = { viewPort ->
             api.getRpls(viewPort.south, viewPort.west, viewPort.north, viewPort.east, viewPort.zoom)
         },
         scope = viewModelScope
     )
-
-    data class PinSet(
-        val rpls: Map<String, Pin> = emptyMap()
-    )
-
-    private val rplsCache = mutableMapOf<String, Pin>()
+    val rplsFlow = rplsSource.flow
 
     private val _zoomLevel = MutableStateFlow(ZoomLevel.Tele)
     private val api = RetrofitInstance.api
-
-    @OptIn(ExperimentalCoroutinesApi::class)
-    val pinFlow: StateFlow<PinSet> = rplsSource.flow
-        .map { rplsState ->
-            if (rplsState is SourceState.Success<List<Cluster>>) {
-                rplsCache.clear()
-                rplsState.data.forEach { cluster ->
-                    val id = cluster.id()
-                    rplsCache.getOrPut(id) {
-                        Pin(
-                            id = cluster.id,
-                            label = cluster.label(),
-                            position = LatLng(cluster.centerLatitude, cluster.centerLongitude),
-                            count = cluster.count
-                        )
-                    }
-                }
-            }
-            PinSet(rplsCache.toMap())
-        }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = PinSet()
-        )
 
     fun onCameraChange(
         south: Double,
