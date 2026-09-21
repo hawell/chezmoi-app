@@ -44,7 +44,7 @@ class GeoJsonDataSource(
                     try {
                         _flow.value = SourceState.Loading
                         val result = apiCall(viewPort)
-                        Log.d("APICALL", (result.data as JsonElement).toString())
+                        Log.d("APICALL", result.data.toString())
                         _flow.value = SourceState.Success(result.data.toString())
                         Log.d("APICALL", GeoJsonObject.fromJson(result.data.toString()).toString())
                     } catch (e: Exception) {

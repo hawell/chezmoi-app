@@ -1,7 +1,9 @@
 package org.chordsoft.chezmoi.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
@@ -17,39 +19,40 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
-import kotlinx.serialization.json.put
-import kotlinx.serialization.json.putJsonArray
-import kotlinx.serialization.json.putJsonObject
 import org.chordsoft.chezmoi.R
 import org.chordsoft.chezmoi.ui.components.LocationRationale
 import org.chordsoft.chezmoi.ui.components.OverlayButton
-import org.chordsoft.chezmoi.ui.components.RplsLayer
+import org.chordsoft.chezmoi.ui.dialogs.LayersSelectDialog
 import org.chordsoft.chezmoi.ui.dialogs.MarkerInfoDialog
 import org.chordsoft.chezmoi.ui.dialogs.SearchAddressDialog
+import org.chordsoft.chezmoi.ui.dialogs.SettingsDialog
+import org.chordsoft.chezmoi.ui.layers.AdminLayer
+import org.chordsoft.chezmoi.ui.layers.CadastreLayer
+import org.chordsoft.chezmoi.ui.layers.PermisLayer
+import org.chordsoft.chezmoi.ui.layers.RplsLayer
 import org.chordsoft.chezmoi.viewmodel.MapViewModel
 import org.chordsoft.chezmoi.viewmodel.SearchAddressViewModel
+import org.chordsoft.chezmoi.viewmodel.SettingsViewModel
 import org.maplibre.compose.camera.CameraPosition
-import org.maplibre.compose.camera.rememberCameraState
-import org.maplibre.compose.layers.RasterLayer
 import org.maplibre.compose.location.LocationPermission
 import org.maplibre.compose.location.LocationPuck
-import org.maplibre.compose.location.mostAccurateBearing
+import org.maplibre.compose.location.rememberDefaultHeadingProvider
 import org.maplibre.compose.location.rememberDefaultLocationProvider
-import org.maplibre.compose.location.rememberDefaultOrientationProvider
 import org.maplibre.compose.location.rememberLocationState
 import org.maplibre.compose.location.rememberSystemSettingsLauncher
+import org.maplibre.compose.map.CameraConstraints
+import org.maplibre.compose.map.LocalMapState
 import org.maplibre.compose.map.MaplibreMap
-import org.maplibre.compose.overlay.CompassButton
-import org.maplibre.compose.overlay.MapOverlay
+import org.maplibre.compose.map.rememberMapState
 import org.maplibre.compose.overlay.ScaleBar
-import org.maplibre.compose.sources.rememberRasterSource
-import org.maplibre.compose.style.BaseStyle.Json
+import org.maplibre.compose.overlay.ZoomButtons
+import org.maplibre.compose.style.BaseStyle
 import org.maplibre.spatialk.geojson.BoundingBox
-import org.maplibre.spatialk.geojson.Point
 import org.maplibre.spatialk.geojson.Position
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -59,53 +62,98 @@ fun MainScreen(
     modifier: Modifier,
     mapViewModel: MapViewModel,
     searchAddressViewModel: SearchAddressViewModel,
+    settingsViewModel: SettingsViewModel
 ) {
-    val rplsFlow = mapViewModel.rplsFlow
     val scope = rememberCoroutineScope()
     val markerInfoState = mapViewModel.markerInfo.collectAsStateWithLifecycle()
+    val locationProvider = rememberDefaultLocationProvider()
+    val headingProvider = rememberDefaultHeadingProvider()
+    val locationState =
+        rememberLocationState(
+            provider = locationProvider,
+            headingProvider = headingProvider,
+        )
+
     var showSearchAddressDialog by remember { mutableStateOf(false) }
     var showMarkerInfoDialog by remember { mutableStateOf(false) }
+    var showLayersSelectDialog by remember { mutableStateOf(false) }
+    var showSettingsDialog by remember { mutableStateOf(false) }
     val keyboardController = LocalSoftwareKeyboardController.current
     val paris = Position(latitude = 48.8540819, longitude = 2.3405084)
     val franceBounds = BoundingBox(
         northeast = Position(latitude = 51.5, longitude = 9.8),
         southwest = Position(latitude = 41.0, longitude = -5.5)
     )
-    val onMarkerClick: (id: Int, type: MapViewModel.MarkerType) -> Unit = { id, type ->
-        mapViewModel.updateMarkerInfo(id, type)
-        showMarkerInfoDialog = true
+    val style by settingsViewModel.style.collectAsStateWithLifecycle()
+    val layers by settingsViewModel.layers.collectAsStateWithLifecycle()
+    val markers by settingsViewModel.markers.collectAsStateWithLifecycle()
+
+    val mapState = rememberMapState(
+        baseStyle = BaseStyle.Uri(style.file),
+        initialCameraPosition = CameraPosition(target = paris, zoom = 8.0)
+    ) {
+        val mapState = checkNotNull(LocalMapState.current)
+        AdminLayer(visible = layers.limiteAdministrative)
+
+        CadastreLayer(
+            visible = layers.cadastre,
+            mapViewModel = mapViewModel,
+            onMarkerClick = {
+                showMarkerInfoDialog = true
+            }
+        )
+
+        RplsLayer(
+            visible = markers.rpls,
+            mapViewModel = mapViewModel,
+            settingsViewModel = settingsViewModel,
+            onMarkerClick = {
+                showMarkerInfoDialog = true
+            }
+        )
+
+        PermisLayer(
+            visible = true,
+            mapViewModel = mapViewModel,
+            settingsViewModel = settingsViewModel
+        )
+
+        LocationPuck(
+            idPrefix = "user",
+            locationState = locationState,
+        )
     }
 
-    val camera = rememberCameraState(firstPosition = CameraPosition(target = paris, zoom = 8.0))
-    LaunchedEffect(camera) {
+    LaunchedEffect(mapState.cameraPosition) {
         snapshotFlow {
-            camera.position to camera.viewport
+            mapState.cameraPosition to mapState.viewport
         }
             .debounce(300.milliseconds)
             .collect { (position, viewport) ->
                 viewport?.let {
-                    val bounds = it.visibleBoundingBox
-                    mapViewModel.onCameraChange(bounds.south, bounds.west, bounds.north, bounds.east, position.zoom.toFloat())
+                    val bounds = it.visibleBounds
+                    mapViewModel.onCameraChange(
+                        bounds.south,
+                        bounds.west,
+                        bounds.north,
+                        bounds.east,
+                        position.zoom.toFloat(),
+                        layers,
+                        markers
+                    )
                 }
             }
     }
-    val locationProvider = rememberDefaultLocationProvider()
-    val orientationProvider =
-        rememberDefaultOrientationProvider() // optional: get device orientation from sensors
-    val locationState =
-        rememberLocationState(
-            provider = locationProvider,
-            orientationProvider = orientationProvider,
-        )
-
     val settings = rememberSystemSettingsLauncher()
     val permission = locationState.permission
     if (permission is LocationPermission.NotGranted) {
         when {
             permission.shouldShowRationale ->
                 LocationRationale(onAccept = locationState::requestPermission)
+
             permission.canRequest != false ->
                 Button(onClick = locationState::requestPermission) { Text("Use my location") }
+
             settings.canOpenApplicationSettings ->
                 Button(onClick = { settings.openApplicationSettings() }) { Text("Open settings") }
         }
@@ -115,35 +163,40 @@ fun MainScreen(
         modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)
     ) {
         MaplibreMap(
-            //baseStyle = BaseStyle.Uri("https://tiles.openfreemap.org/styles/liberty"),
-            //baseStyle = BaseStyle.Uri("https://data.geopf.fr/annexes/ressources/vectorTiles/styles/PLAN.IGN/standard.json"),
-            baseStyle = Json {
-                put("version", 8)
-                put("name", "MapLibre Compose")
-                put("glyphs", "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf")
-                putJsonObject("metadata") {}
-                putJsonObject("sources") {}
-                putJsonArray("layers") {}
-            },
-            cameraState = camera,
-            boundingBox = franceBounds,
-            overlay = MapOverlay {
+            state = mapState,
+            cameraConstraints = CameraConstraints(boundingBox = franceBounds),
+            overlay = {
                 ScaleBar(
-                    cameraState.viewport?.metersPerDpAtTarget ?: 0.0,
+                    this.mapState.viewport?.metersPerDpAtTarget ?: 0.0,
                     modifier = Modifier.align(Alignment.BottomStart),
                 ) // (1)!
-                CompassButton(cameraState, modifier = Modifier.align(Alignment.TopEnd))
-                OverlayButton(
-                    icon = R.drawable.my_location_24px,
+                Column(
                     modifier = Modifier.align(Alignment.BottomEnd),
-                    onClick = {
-                        locationState.location?.let {
-                            scope.launch {
-                                camera.animateTo(CameraPosition(target = it.position.value, zoom = 15.0))
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+/*
+                    CompassButton(
+                        style = CompassDefaults.style()
+                            .copy(containerColor = Color.Gray.copy(alpha = 0.8f))
+                    )
+*/
+                    OverlayButton(
+                        icon = R.drawable.my_location_24px,
+                        onClick = {
+                            locationState.lastLocation?.let {
+                                scope.launch {
+                                    this@MaplibreMap.mapState.animateCameraPosition(
+                                        CameraPosition(
+                                            target = it.position,
+                                            zoom = 15.0
+                                        )
+                                    )
+                                }
                             }
                         }
-                    }
-                )
+                    )
+                }
                 OverlayButton(
                     icon = R.drawable.search_24px,
                     modifier = Modifier.align(Alignment.TopStart),
@@ -151,62 +204,73 @@ fun MainScreen(
                         showSearchAddressDialog = true
                     }
                 )
-            },
-        ) {
-            val osmSource = rememberRasterSource(
-                tiles = listOf(
-                    "https://a.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png",
-                    "https://b.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png",
-                    "https://c.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png",
-                ),
-                tileSize = 256,
-            )
 
-            RasterLayer(
-                id = "osmfr-layer",
-                source = osmSource,
-            )
-
-            RplsLayer(rplsFlow, camera, onMarkerClick)
-
-            LocationPuck(
-                idPrefix = "user",
-                location = locationState.location,
-                // optional: combine course and orientation bearing
-                bearing = locationState.mostAccurateBearing(),
-                cameraState = camera,
-            )
-        }
-    }
-
-    if (showSearchAddressDialog) {
-        SearchAddressDialog(
-            searchAddressViewModel = searchAddressViewModel,
-            onDismiss = { showSearchAddressDialog = false },
-            onSelect = { lat, lng ->
-                keyboardController?.hide()
-                showSearchAddressDialog = false
-                scope.launch {
-                    camera.animateTo(
-                        CameraPosition(target = Position(latitude = lat, longitude = lng), zoom = 16.0)
+                Column(
+                    modifier = Modifier.align(Alignment.TopEnd),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    OverlayButton(
+                        icon = R.drawable.layers_24px,
+                        onClick = {
+                            showLayersSelectDialog = true
+                        }
+                    )
+                    OverlayButton(
+                        icon = R.drawable.settings_24px,
+                        onClick = {
+                            showSettingsDialog = true
+                        }
                     )
                 }
-            }
+            },
         )
-    }
-    if (showMarkerInfoDialog) {
-        MarkerInfoDialog({ showMarkerInfoDialog = false }) {
-            when (markerInfoState.value.type) {
-                MapViewModel.MarkerType.Unknown -> {
-                    Text("Loading...")
-                }
 
-                MapViewModel.MarkerType.RplsMarker -> {
-                    markerInfoState.value.text.forEach {
-                        Text(it)
+        if (showSearchAddressDialog) {
+            SearchAddressDialog(
+                searchAddressViewModel = searchAddressViewModel,
+                onDismiss = { showSearchAddressDialog = false },
+                onSelect = { lat, lng ->
+                    keyboardController?.hide()
+                    showSearchAddressDialog = false
+                    scope.launch {
+                        mapState.animateCameraPosition(
+                            CameraPosition(
+                                target = Position(latitude = lat, longitude = lng),
+                                zoom = 16.0
+                            )
+                        )
+                    }
+                }
+            )
+        }
+        if (showMarkerInfoDialog) {
+            MarkerInfoDialog({ showMarkerInfoDialog = false }) {
+                when (markerInfoState.value.type) {
+                    MapViewModel.MarkerType.Unknown -> {
+                        Text("Loading...")
+                    }
+
+                    else -> {
+                        markerInfoState.value.text.forEach {
+                            Text(it)
+                        }
                     }
                 }
             }
+        }
+        if (showLayersSelectDialog) {
+            LayersSelectDialog(
+                settingsViewModel = settingsViewModel,
+                onDismiss = { showLayersSelectDialog = false }
+            )
+        }
+
+        if (showSettingsDialog) {
+            SettingsDialog(
+                settingsViewModel = settingsViewModel,
+                onDismiss = { showSettingsDialog = false }
+            )
         }
     }
 }

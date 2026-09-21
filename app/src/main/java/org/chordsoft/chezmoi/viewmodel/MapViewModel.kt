@@ -7,10 +7,11 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.launch
 import org.chordsoft.chezmoi.data.api.RetrofitInstance
 import org.chordsoft.chezmoi.data.model.Rpls
 import org.chordsoft.chezmoi.data.sources.GeoJsonDataSource
+import org.chordsoft.chezmoi.data.sources.Layers
+import org.chordsoft.chezmoi.data.sources.Markers
 import org.chordsoft.chezmoi.data.sources.ZoomLevel
 import org.maplibre.spatialk.geojson.Position
 
@@ -25,11 +26,12 @@ class MapViewModel: ViewModel() {
 
     enum class MarkerType {
         Unknown,
-        RplsMarker
+        RplsMarker,
+        CadastreParcelle
     }
 
     data class MarkerInfo(
-        val id: Int = 0,
+        val id: String = "",
         val type: MarkerType = MarkerType.Unknown,
         val text: List<String> = emptyList()
     )
@@ -37,27 +39,12 @@ class MapViewModel: ViewModel() {
     private val _markerInfo = MutableStateFlow(MarkerInfo())
     val markerInfo: StateFlow<MarkerInfo> = _markerInfo
 
-    fun updateMarkerInfo(id: Int, type: MarkerType) {
-        viewModelScope.launch {
-            try {
-                val res = api.getRplsDetails(id)
-                _markerInfo.value = MarkerInfo(
-                    id = res.data.id,
-                    type = MarkerType.RplsMarker,
-                    text = listOf(
-                        "${res.data.number} ${res.data.address}",
-                        "${res.data.postalCode} ${res.data.city}",
-                        "Année construction: ${res.data.constructionYear}",
-                        "Nbr PLAI: ${res.data.numPlai}",
-                        "Nbr PLUS: ${res.data.numPlus}",
-                        "Nbr PLS: ${res.data.numPls}",
-                        "Nbr PLI: ${res.data.numPli}",
-                        "Nbr Inconnu: ${res.data.numUnknown}",
-                    )
-                )
-            } catch (e: Exception) {
-            }
-        }
+    fun updateMarkerInfo(type: MarkerType, id: String, value: List<String>) {
+        _markerInfo.value = MarkerInfo(
+            id = id,
+            type = type,
+            text = value
+        )
     }
 
     private val rplsSource = GeoJsonDataSource(
@@ -76,14 +63,18 @@ class MapViewModel: ViewModel() {
         west: Double,
         north: Double,
         east: Double,
-        zoom: Float
+        zoom: Float,
+        layers: Layers,
+        markers: Markers
     ) {
         _zoomLevel.value = when {
             zoom >= 15.0 -> ZoomLevel.Tele
             zoom >= 13.0 -> ZoomLevel.Wide
             else -> ZoomLevel.City
         }
-        rplsSource.updateViewPort(south, west, north, east, zoom)
+        if (markers.rpls) {
+            rplsSource.updateViewPort(south, west, north, east, zoom)
+        }
     }
 
     suspend fun getRplsDetails(id: Int): Rpls? {

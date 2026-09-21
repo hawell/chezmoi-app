@@ -1,5 +1,6 @@
 [versions]
 agp = "9.3.1"
+kotlinSerialization = "2.4.20"
 coreKtx = "1.19.0"
 gson = "2.14.0"
 junit = "4.13.2"
@@ -7,14 +8,17 @@ junitVersion = "1.3.0"
 espressoCore = "3.7.0"
 lifecycleRuntimeKtx = "2.11.0"
 activityCompose = "1.13.0"
-kotlin = "2.4.10"
-composeBom = "2026.08.00"
-locationRuntimeGms = "0.15.0"
-maplibreComposeRuntimeVulkanAndroid = "0.15.0"
+kotlin = "2.4.20"
+composeBom = "2026.09.00"
+maplibreCompose = "0.16.0"
+locationRuntimeGms = "0.16.0"
+maplibreComposeRuntimeVulkanAndroid = "0.16.0"
 converterGson = "3.0.0"
 retrofitVersion = "3.0.0"
+datastorePreferences = "1.2.1"
 
 [libraries]
+androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastorePreferences" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -34,9 +38,10 @@ location-runtime-gms = { module = "org.maplibre.compose:location-runtime-gms", v
 maplibre-compose-runtime-vulkan-android = { module = "org.maplibre.compose:maplibre-compose-runtime-vulkan-android", version.ref = "maplibreComposeRuntimeVulkanAndroid" }
 converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "converterGson" }
 retrofit2-retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofitVersion" }
-maplibre-compose = { module = "org.maplibre.compose:maplibre-compose", version = "0.15.0" }
+maplibre-compose = { module = "org.maplibre.compose:maplibre-compose", version.ref = "maplibreCompose" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+jetbrains-kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlinSerialization"}
 

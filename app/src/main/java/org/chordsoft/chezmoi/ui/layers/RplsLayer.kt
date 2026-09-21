@@ -1,4 +1,4 @@
-package org.chordsoft.chezmoi.ui.components
+package org.chordsoft.chezmoi.ui.layers
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -7,22 +7,20 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.int
 import org.chordsoft.chezmoi.R
 import org.chordsoft.chezmoi.data.sources.SourceState
 import org.chordsoft.chezmoi.viewmodel.MapViewModel
-import org.maplibre.compose.camera.CameraPosition
-import org.maplibre.compose.camera.CameraState
+import org.chordsoft.chezmoi.viewmodel.SettingsViewModel
 import org.maplibre.compose.layers.SymbolLayer
 import org.maplibre.compose.sources.GeoJsonData
 import org.maplibre.compose.sources.rememberGeoJsonSource
 import org.maplibre.compose.expressions.dsl.*
 import org.maplibre.compose.expressions.value.SymbolAnchor
 import org.maplibre.compose.expressions.value.TextJustify
-import org.maplibre.compose.util.ClickResult
+import org.maplibre.compose.interaction.ClickResult
 import org.maplibre.spatialk.geojson.FeatureCollection
 import org.maplibre.spatialk.geojson.Geometry
 import org.maplibre.spatialk.geojson.Point
@@ -30,18 +28,26 @@ import org.maplibre.spatialk.geojson.Position
 
 @Composable
 fun RplsLayer(
-    flow: StateFlow<SourceState<String>>,
-    camera: CameraState,
-    onClick: (id: Int, type: MapViewModel.MarkerType) -> Unit
+    visible: Boolean,
+    mapViewModel: MapViewModel,
+    settingsViewModel: SettingsViewModel,
+    onMarkerClick: () -> Unit
 ) {
-    val state by flow.collectAsStateWithLifecycle()
+    if (!visible) return
+    val state by mapViewModel.rplsFlow.collectAsStateWithLifecycle()
+    val style by settingsViewModel.style.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
-    val source = rememberGeoJsonSource(
-        data = GeoJsonData.Features(FeatureCollection<Geometry, JsonObject?>(emptyList()))
-    )
-    if (state is SourceState.Success<String>) {
-        source.setData(GeoJsonData.JsonString((state as SourceState.Success<String>).data))
+    val data = when (val currentState = state) {
+        is SourceState.Success<String> ->
+            GeoJsonData.JsonString(currentState.data)
+
+        else ->
+            GeoJsonData.Features(
+                FeatureCollection<Geometry, JsonObject?>(emptyList())
+            )
     }
+
+    val source = rememberGeoJsonSource(data = data)
     SymbolLayer(
         id = "rpls-symbols",
         source = source,
@@ -52,7 +58,7 @@ fun RplsLayer(
 
         textField = format(span(feature["count"].cast())),
         textFont = const(
-            listOf("Open Sans Regular", "Arial Unicode MS Regular")
+            listOf(style.textFont)
         ),
         textColor = const(Color.White),
         textSize = const(10.sp),
@@ -71,13 +77,31 @@ fun RplsLayer(
                         longitude = point.coordinates.longitude
                     )
                     scope.launch {
-                        camera.animateTo(
-                            CameraPosition(target = position, zoom = camera.position.zoom + 2)
-                        )
+                        // TODO: move camera
                     }
                 }
             } else {
-              onClick(features[0].id?.int ?: 0, MapViewModel.MarkerType.RplsMarker)
+                scope.launch {
+                    val id = features[0].id?.int ?: 0
+                    val details = mapViewModel.getRplsDetails(id)
+                    details?.let {
+                        mapViewModel.updateMarkerInfo(
+                            type = MapViewModel.MarkerType.RplsMarker,
+                            id = id.toString(),
+                            value = listOf(
+                                "${details.number} ${details.address}",
+                                "${details.postalCode} ${details.city}",
+                                "Année construction: ${details.constructionYear}",
+                                "Nbr PLAI: ${details.numPlai}",
+                                "Nbr PLUS: ${details.numPlus}",
+                                "Nbr PLS: ${details.numPls}",
+                                "Nbr PLI: ${details.numPli}",
+                                "Nbr Inconnu: ${details.numUnknown}",
+                            )
+                        )
+                        onMarkerClick()
+                    }
+                }
             }
             ClickResult.Consume
         }
