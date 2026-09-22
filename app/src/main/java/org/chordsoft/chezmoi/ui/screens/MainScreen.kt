@@ -18,6 +18,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -27,6 +29,7 @@ import kotlinx.coroutines.launch
 import org.chordsoft.chezmoi.R
 import org.chordsoft.chezmoi.ui.components.LocationRationale
 import org.chordsoft.chezmoi.ui.components.OverlayButton
+import org.chordsoft.chezmoi.ui.components.createMarkerBitmap
 import org.chordsoft.chezmoi.ui.dialogs.LayersSelectDialog
 import org.chordsoft.chezmoi.ui.dialogs.MarkerInfoDialog
 import org.chordsoft.chezmoi.ui.dialogs.SearchAddressDialog
@@ -48,10 +51,12 @@ import org.maplibre.compose.location.rememberSystemSettingsLauncher
 import org.maplibre.compose.map.CameraConstraints
 import org.maplibre.compose.map.LocalMapState
 import org.maplibre.compose.map.MaplibreMap
+import org.maplibre.compose.map.StyleImages
 import org.maplibre.compose.map.rememberMapState
 import org.maplibre.compose.overlay.ScaleBar
 import org.maplibre.compose.overlay.ZoomButtons
 import org.maplibre.compose.style.BaseStyle
+import org.maplibre.nativeffi.style.StyleImage
 import org.maplibre.spatialk.geojson.BoundingBox
 import org.maplibre.spatialk.geojson.Position
 import kotlin.time.Duration.Companion.milliseconds
@@ -65,7 +70,8 @@ fun MainScreen(
     settingsViewModel: SettingsViewModel
 ) {
     val scope = rememberCoroutineScope()
-    val markerInfoState = mapViewModel.markerInfo.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    val markerInfoState = mapViewModel.markerInfo
     val locationProvider = rememberDefaultLocationProvider()
     val headingProvider = rememberDefaultHeadingProvider()
     val locationState =
@@ -93,6 +99,7 @@ fun MainScreen(
         initialCameraPosition = CameraPosition(target = paris, zoom = 8.0)
     ) {
         val mapState = checkNotNull(LocalMapState.current)
+
         AdminLayer(visible = layers.limiteAdministrative)
 
         CadastreLayer(
@@ -113,9 +120,12 @@ fun MainScreen(
         )
 
         PermisLayer(
-            visible = true,
+            visible = markers.permis,
             mapViewModel = mapViewModel,
-            settingsViewModel = settingsViewModel
+            settingsViewModel = settingsViewModel,
+            onMarkerClick = {
+                showMarkerInfoDialog = true
+            }
         )
 
         LocationPuck(
@@ -245,19 +255,7 @@ fun MainScreen(
             )
         }
         if (showMarkerInfoDialog) {
-            MarkerInfoDialog({ showMarkerInfoDialog = false }) {
-                when (markerInfoState.value.type) {
-                    MapViewModel.MarkerType.Unknown -> {
-                        Text("Loading...")
-                    }
-
-                    else -> {
-                        markerInfoState.value.text.forEach {
-                            Text(it)
-                        }
-                    }
-                }
-            }
+            MarkerInfoDialog(markerInfoState, { showMarkerInfoDialog = false })
         }
         if (showLayersSelectDialog) {
             LayersSelectDialog(

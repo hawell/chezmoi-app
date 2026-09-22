@@ -33,5 +33,6 @@ class MarkersSource(private val context: Context): MutableDataSetSource<Markers>
 
 @Serializable
 data class Markers(
-    val rpls: Boolean = false
+    val rpls: Boolean = false,
+    val permis: Boolean = false
 )

@@ -1,6 +1,5 @@
 package org.chordsoft.chezmoi.ui.dialogs
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -62,6 +61,12 @@ fun LayersSelectDialog(
             icon = R.drawable.shield_with_house_24px,
             get = { markers.rpls },
             set = { scope.launch { settingsViewModel.setMarkers(markers.copy(rpls = !markers.rpls))} }
+        ),
+        SelectItem(
+            name = "Permis",
+            icon = R.drawable.approval_24px,
+            get = { markers.permis },
+            set = { scope.launch { settingsViewModel.setMarkers(markers.copy(permis = !markers.permis))} }
         )
     )
 

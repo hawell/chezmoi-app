@@ -27,7 +27,8 @@ class MapViewModel: ViewModel() {
     enum class MarkerType {
         Unknown,
         RplsMarker,
-        CadastreParcelle
+        CadastreParcelle,
+        Permis
     }
 
     data class MarkerInfo(
