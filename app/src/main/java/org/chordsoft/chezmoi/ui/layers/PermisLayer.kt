@@ -18,7 +18,6 @@ import org.maplibre.compose.expressions.dsl.image
 import org.maplibre.compose.interaction.ClickResult
 import org.maplibre.compose.layers.SymbolLayer
 import org.maplibre.compose.sources.rememberVectorTileSource
-import org.maplibre.nativeffi.log.LogEvent
 
 @Composable
 fun PermisLayer(
@@ -30,33 +29,34 @@ fun PermisLayer(
     if (!visible) return
     val state by mapViewModel.rplsFlow.collectAsStateWithLifecycle()
     val style by settingsViewModel.style.collectAsStateWithLifecycle()
+    val minZoom = 15f
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val amenagerImage = remember {
         createMarkerBitmap(
             context = context,
-            pinRes = R.drawable.ic_map_marker,
+            pinRes = R.drawable.ic_map_marker_permis,
             iconRes = R.drawable.imagesearch_roller_24px,
         ).asImageBitmap()
     }
     val demolirImage = remember {
         createMarkerBitmap(
             context = context,
-            pinRes = R.drawable.ic_map_marker,
+            pinRes = R.drawable.ic_map_marker_permis,
             iconRes = R.drawable.destruction_24px
         ).asImageBitmap()
     }
     val construireLogementImage = remember {
         createMarkerBitmap(
             context = context,
-            pinRes = R.drawable.ic_map_marker,
+            pinRes = R.drawable.ic_map_marker_permis,
             iconRes = R.drawable.add_home_24px
         ).asImageBitmap()
     }
     val construireNonResidentielImage = remember {
         createMarkerBitmap(
             context = context,
-            pinRes = R.drawable.ic_map_marker,
+            pinRes = R.drawable.ic_map_marker_permis,
             iconRes = R.drawable.add_home_work_24px
         ).asImageBitmap()
     }
@@ -86,7 +86,7 @@ fun PermisLayer(
         id = "permis-amenager-symbols",
         sourceLayer = "permis_amenager_loc",
         source = permisAmenagerSource,
-        minZoom = 10f,
+        minZoom = minZoom,
 
         iconImage = image(amenagerImage),
         iconAllowOverlap = const(true),
@@ -103,15 +103,21 @@ fun PermisLayer(
                 val superficieTerrain = features[0].properties?.getOrDefault("superficie_terrain", "-").toString()
                 val commune = features[0].properties?.getOrDefault("comm", "-").toString()
                 mapViewModel.updateMarkerInfo(
-                    type = MapViewModel.MarkerType.Permis,
-                    id = "$numPermis-$parcelleId",
-                    value = listOf(
-                        "Date autorasion: $dateAutorisation",
-                        "Parcelle Id: $parcelleId",
-                        "Zone Op: $zoneOP",
-                        "Etat permis: $etatPermis",
-                        "Superficie terrain: $superficieTerrain",
-                        "Commune: $commune"
+                    MapViewModel.MarkerInfo(
+                        type = MapViewModel.MarkerType.Permis,
+                        items = listOf(
+                            MapViewModel.MarkerInfoItem(
+                                id = "$numPermis-$parcelleId",
+                                data = listOf(
+                                    "Date autorasion: $dateAutorisation",
+                                    "Parcelle Id: $parcelleId",
+                                    "Zone Op: $zoneOP",
+                                    "Etat permis: $etatPermis",
+                                    "Superficie terrain: $superficieTerrain",
+                                    "Commune: $commune"
+                                )
+                            )
+                        ),
                     )
                 )
                 onMarkerClick()
@@ -125,7 +131,7 @@ fun PermisLayer(
         id = "permis-demolir-symbols",
         source = permisDemolirSource,
         sourceLayer = "permis_demolir_loc",
-        minZoom = 10f,
+        minZoom = minZoom,
 
         iconImage = image(demolirImage),
         iconAllowOverlap = const(true),
@@ -142,15 +148,21 @@ fun PermisLayer(
                 val superficieTerrain = features[0].properties?.getOrDefault("superficie_terrain", "-").toString()
                 val commune = features[0].properties?.getOrDefault("comm", "-").toString()
                 mapViewModel.updateMarkerInfo(
-                    type = MapViewModel.MarkerType.Permis,
-                    id = "$numPermis-$parcelleId",
-                    value = listOf(
-                        "Date autorasion: $dateAutorisation",
-                        "Parcelle Id: $parcelleId",
-                        "Zone Op: $zoneOP",
-                        "Etat permis: $etatPermis",
-                        "Superficie terrain: $superficieTerrain",
-                        "Commune: $commune"
+                    MapViewModel.MarkerInfo(
+                        type = MapViewModel.MarkerType.Permis,
+                        items = listOf(
+                            MapViewModel.MarkerInfoItem(
+                                id = "$numPermis-$parcelleId",
+                                data = listOf(
+                                    "Date autorasion: $dateAutorisation",
+                                    "Parcelle Id: $parcelleId",
+                                    "Zone Op: $zoneOP",
+                                    "Etat permis: $etatPermis",
+                                    "Superficie terrain: $superficieTerrain",
+                                    "Commune: $commune"
+                                )
+                            )
+                        ),
                     )
                 )
                 onMarkerClick()
@@ -164,7 +176,7 @@ fun PermisLayer(
         id = "permis-construire-non-residentiels-symbols",
         source = permisConstruireNonResidentielsSource,
         sourceLayer = "permis_construire_non_residentiels_loc",
-        minZoom = 10f,
+        minZoom = minZoom,
 
         iconImage = image(construireNonResidentielImage),
         iconAllowOverlap = const(true),
@@ -181,15 +193,21 @@ fun PermisLayer(
                 val superficieTerrain = features[0].properties?.getOrDefault("superficie_terrain", "-").toString()
                 val commune = features[0].properties?.getOrDefault("comm", "-").toString()
                 mapViewModel.updateMarkerInfo(
-                    type = MapViewModel.MarkerType.Permis,
-                    id = "$numPermis-$parcelleId",
-                    value = listOf(
-                        "Date autorasion: $dateAutorisation",
-                        "Parcelle Id: $parcelleId",
-                        "Zone Op: $zoneOP",
-                        "Etat permis: $etatPermis",
-                        "Superficie terrain: $superficieTerrain",
-                        "Commune: $commune"
+                    MapViewModel.MarkerInfo(
+                        type = MapViewModel.MarkerType.Permis,
+                        items = listOf(
+                            MapViewModel.MarkerInfoItem(
+                                id = "$numPermis-$parcelleId",
+                                data = listOf(
+                                    "Date autorasion: $dateAutorisation",
+                                    "Parcelle Id: $parcelleId",
+                                    "Zone Op: $zoneOP",
+                                    "Etat permis: $etatPermis",
+                                    "Superficie terrain: $superficieTerrain",
+                                    "Commune: $commune"
+                                )
+                            )
+                        ),
                     )
                 )
                 onMarkerClick()
@@ -203,7 +221,7 @@ fun PermisLayer(
         id = "permis-logement-symbols",
         source = PermisConstruireResidentielsSource,
         sourceLayer = "permis_construire_residentiels_loc",
-        minZoom = 10f,
+        minZoom = minZoom,
 
         iconImage = image(construireLogementImage),
         iconAllowOverlap = const(true),
@@ -220,15 +238,21 @@ fun PermisLayer(
                 val superficieTerrain = features[0].properties?.getOrDefault("superficie_terrain", "-").toString()
                 val commune = features[0].properties?.getOrDefault("comm", "-").toString()
                 mapViewModel.updateMarkerInfo(
-                    type = MapViewModel.MarkerType.Permis,
-                    id = "$numPermis-$parcelleId",
-                    value = listOf(
-                        "Date autorasion: $dateAutorisation",
-                        "Parcelle Id: $parcelleId",
-                        "Zone Op: $zoneOP",
-                        "Etat permis: $etatPermis",
-                        "Superficie terrain: $superficieTerrain",
-                        "Commune: $commune"
+                    MapViewModel.MarkerInfo(
+                        type = MapViewModel.MarkerType.Permis,
+                        items = listOf(
+                            MapViewModel.MarkerInfoItem(
+                                id = "$numPermis-$parcelleId",
+                                data = listOf(
+                                    "Date autorasion: $dateAutorisation",
+                                    "Parcelle Id: $parcelleId",
+                                    "Zone Op: $zoneOP",
+                                    "Etat permis: $etatPermis",
+                                    "Superficie terrain: $superficieTerrain",
+                                    "Commune: $commune"
+                                )
+                            )
+                        ),
                     )
                 )
                 onMarkerClick()

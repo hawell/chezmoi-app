@@ -61,7 +61,15 @@ fun CadastreLayer(
                 "updated: ${features[0].properties?.get("updated")}",
                 "created: ${features[0].properties?.get("created")}",
             )
-            mapViewModel.updateMarkerInfo(MapViewModel.MarkerType.CadastreParcelle, features[0].getStringProperty("id")?: "", value)
+            mapViewModel.updateMarkerInfo(MapViewModel.MarkerInfo(
+                type = MapViewModel.MarkerType.CadastreParcelle,
+                items = listOf(
+                    MapViewModel.MarkerInfoItem(
+                        id = features[0].getStringProperty("id")?: "",
+                        data = value
+                        )
+                )
+            ))
             onMarkerClick()
             ClickResult.Consume
         }

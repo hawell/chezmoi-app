@@ -1,0 +1,23 @@
+{
+  "version": 8,
+  "name": "MapLibre Compose",
+  "glyphs": "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf",
+
+  "sources": {
+    "aerienne": {
+      "type": "raster",
+      "tiles": [
+        "https://data.geopf.fr/wmts?=&REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&FORMAT=image/jpeg&LAYER=ORTHOIMAGERY.ORTHOPHOTOS2011-2015&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}"
+      ],
+      "tileSize": 256
+    }
+  },
+
+  "layers": [
+    {
+      "id": "aerienne-layer",
+      "type": "raster",
+      "source": "aerienne"
+    }
+  ]
+}

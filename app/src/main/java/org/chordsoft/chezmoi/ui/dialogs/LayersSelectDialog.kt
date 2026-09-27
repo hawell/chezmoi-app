@@ -67,6 +67,12 @@ fun LayersSelectDialog(
             icon = R.drawable.approval_24px,
             get = { markers.permis },
             set = { scope.launch { settingsViewModel.setMarkers(markers.copy(permis = !markers.permis))} }
+        ),
+        SelectItem(
+            name = "Valeur Fonciere",
+            icon = R.drawable.euro_symbol_24px,
+            get = { markers.valeurFonciere },
+            set = { scope.launch { settingsViewModel.setMarkers(markers.copy(valeurFonciere = !markers.valeurFonciere))} }
         )
     )
 

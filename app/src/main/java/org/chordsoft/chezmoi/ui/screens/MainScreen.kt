@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -18,7 +19,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.dp
@@ -29,7 +29,7 @@ import kotlinx.coroutines.launch
 import org.chordsoft.chezmoi.R
 import org.chordsoft.chezmoi.ui.components.LocationRationale
 import org.chordsoft.chezmoi.ui.components.OverlayButton
-import org.chordsoft.chezmoi.ui.components.createMarkerBitmap
+import org.chordsoft.chezmoi.ui.dialogs.IrisInfoDialog
 import org.chordsoft.chezmoi.ui.dialogs.LayersSelectDialog
 import org.chordsoft.chezmoi.ui.dialogs.MarkerInfoDialog
 import org.chordsoft.chezmoi.ui.dialogs.SearchAddressDialog
@@ -38,6 +38,7 @@ import org.chordsoft.chezmoi.ui.layers.AdminLayer
 import org.chordsoft.chezmoi.ui.layers.CadastreLayer
 import org.chordsoft.chezmoi.ui.layers.PermisLayer
 import org.chordsoft.chezmoi.ui.layers.RplsLayer
+import org.chordsoft.chezmoi.ui.layers.ValeurFonciereLayer
 import org.chordsoft.chezmoi.viewmodel.MapViewModel
 import org.chordsoft.chezmoi.viewmodel.SearchAddressViewModel
 import org.chordsoft.chezmoi.viewmodel.SettingsViewModel
@@ -51,12 +52,9 @@ import org.maplibre.compose.location.rememberSystemSettingsLauncher
 import org.maplibre.compose.map.CameraConstraints
 import org.maplibre.compose.map.LocalMapState
 import org.maplibre.compose.map.MaplibreMap
-import org.maplibre.compose.map.StyleImages
 import org.maplibre.compose.map.rememberMapState
 import org.maplibre.compose.overlay.ScaleBar
-import org.maplibre.compose.overlay.ZoomButtons
 import org.maplibre.compose.style.BaseStyle
-import org.maplibre.nativeffi.style.StyleImage
 import org.maplibre.spatialk.geojson.BoundingBox
 import org.maplibre.spatialk.geojson.Position
 import kotlin.time.Duration.Companion.milliseconds
@@ -84,6 +82,7 @@ fun MainScreen(
     var showMarkerInfoDialog by remember { mutableStateOf(false) }
     var showLayersSelectDialog by remember { mutableStateOf(false) }
     var showSettingsDialog by remember { mutableStateOf(false) }
+    var showIrisInfoDialog by remember { mutableStateOf(false) }
     val keyboardController = LocalSoftwareKeyboardController.current
     val paris = Position(latitude = 48.8540819, longitude = 2.3405084)
     val franceBounds = BoundingBox(
@@ -100,7 +99,14 @@ fun MainScreen(
     ) {
         val mapState = checkNotNull(LocalMapState.current)
 
-        AdminLayer(visible = layers.limiteAdministrative)
+        AdminLayer(
+            visible = layers.limiteAdministrative,
+            mapState = mapState,
+            mapViewModel = mapViewModel,
+            onIrisClick = {
+                showIrisInfoDialog = true
+            }
+        )
 
         CadastreLayer(
             visible = layers.cadastre,
@@ -112,6 +118,7 @@ fun MainScreen(
 
         RplsLayer(
             visible = markers.rpls,
+            mapState = mapState,
             mapViewModel = mapViewModel,
             settingsViewModel = settingsViewModel,
             onMarkerClick = {
@@ -121,6 +128,15 @@ fun MainScreen(
 
         PermisLayer(
             visible = markers.permis,
+            mapViewModel = mapViewModel,
+            settingsViewModel = settingsViewModel,
+            onMarkerClick = {
+                showMarkerInfoDialog = true
+            }
+        )
+
+        ValeurFonciereLayer(
+            visible = markers.valeurFonciere,
             mapViewModel = mapViewModel,
             settingsViewModel = settingsViewModel,
             onMarkerClick = {
@@ -176,6 +192,9 @@ fun MainScreen(
             state = mapState,
             cameraConstraints = CameraConstraints(boundingBox = franceBounds),
             overlay = {
+                Surface(modifier = Modifier.align(Alignment.TopCenter)) {
+                    Text(text = mapState.cameraPosition.zoom.toString())
+                }
                 ScaleBar(
                     this.mapState.viewport?.metersPerDpAtTarget ?: 0.0,
                     modifier = Modifier.align(Alignment.BottomStart),
@@ -268,6 +287,13 @@ fun MainScreen(
             SettingsDialog(
                 settingsViewModel = settingsViewModel,
                 onDismiss = { showSettingsDialog = false }
+            )
+        }
+
+        if (showIrisInfoDialog) {
+            IrisInfoDialog(
+                mapViewModel = mapViewModel,
+                onDismiss = { showIrisInfoDialog = false }
             )
         }
     }

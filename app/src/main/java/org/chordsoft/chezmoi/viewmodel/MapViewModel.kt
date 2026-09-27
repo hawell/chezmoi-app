@@ -28,24 +28,34 @@ class MapViewModel: ViewModel() {
         Unknown,
         RplsMarker,
         CadastreParcelle,
+        ValeurFonciere,
         Permis
     }
 
-    data class MarkerInfo(
+    data class MarkerInfoItem(
         val id: String = "",
-        val type: MarkerType = MarkerType.Unknown,
-        val text: List<String> = emptyList()
+        val data: List<String> = emptyList()
     )
 
+    data class MarkerInfo(
+        val type: MarkerType = MarkerType.Unknown,
+        val items: List<MarkerInfoItem> = emptyList()
+    )
     private val _markerInfo = MutableStateFlow(MarkerInfo())
     val markerInfo: StateFlow<MarkerInfo> = _markerInfo
+    fun updateMarkerInfo(markerInfo: MarkerInfo) {
+        _markerInfo.value = markerInfo
+    }
 
-    fun updateMarkerInfo(type: MarkerType, id: String, value: List<String>) {
-        _markerInfo.value = MarkerInfo(
-            id = id,
-            type = type,
-            text = value
-        )
+    data class IrisInfo(
+        val id: String = "",
+        val name: String = "",
+        val commune: String = ""
+    )
+    private val _irisInfo = MutableStateFlow(IrisInfo())
+    val irisInfo: StateFlow<IrisInfo> = _irisInfo
+    fun updateIrisInfo(irisInfo: IrisInfo) {
+        _irisInfo.value = irisInfo
     }
 
     private val rplsSource = GeoJsonDataSource(

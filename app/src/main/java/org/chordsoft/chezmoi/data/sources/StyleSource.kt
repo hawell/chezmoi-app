@@ -11,7 +11,8 @@ import kotlin.String
 val mapStyles = mapOf(
     "openfreemap-liberty" to Style("openfreemap-liberty", "asset://openfreemap-liberty.json", "Noto Sans Regular"),
     "plan-ign-standard" to Style("plan-ign-standard", "asset://plan-ign-standard.json", "Open Sans Regular"),
-    "simple" to Style("simple", "asset://simple.json", "Open Sans Semibold")
+    "simple" to Style("simple", "asset://simple.json", "Open Sans Semibold"),
+    "aerienne" to Style("aerienne", "asset://aerienne.json", "Open Sans Semibold")
 )
 
 class StyleSource(private val context: Context): MutableDataSetSource<Style> {
