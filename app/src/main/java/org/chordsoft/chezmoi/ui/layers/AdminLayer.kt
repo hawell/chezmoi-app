@@ -2,35 +2,44 @@ package org.chordsoft.chezmoi.ui.layers
 
 import android.util.Log
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonNull
-import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonPrimitive
+import org.chordsoft.chezmoi.data.sources.Statistics
 import org.chordsoft.chezmoi.viewmodel.MapViewModel
+import org.chordsoft.chezmoi.viewmodel.SettingsViewModel
 import org.maplibre.compose.camera.CameraPosition
+import org.maplibre.compose.expressions.dsl.case
 import org.maplibre.compose.expressions.dsl.const
+import org.maplibre.compose.expressions.dsl.feature
+import org.maplibre.compose.expressions.dsl.switch
 import org.maplibre.compose.interaction.ClickResult
+import org.maplibre.compose.layers.FeaturesClickHandler
 import org.maplibre.compose.layers.FillLayer
+import org.maplibre.compose.layers.HeatmapLayer
 import org.maplibre.compose.layers.LineLayer
 import org.maplibre.compose.map.MapState
+import org.maplibre.compose.sources.VectorTileSource
 import org.maplibre.compose.sources.rememberVectorTileSource
-import org.maplibre.spatialk.geojson.Polygon
 import org.maplibre.spatialk.geojson.Position
 import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
 fun AdminLayer(
-    visible: Boolean,
     mapViewModel: MapViewModel,
+    settingsViewModel: SettingsViewModel,
     mapState: MapState,
     onIrisClick: () -> Unit
 ) {
-    if (!visible) return
     val scope = rememberCoroutineScope()
+    val layers by settingsViewModel.layers.collectAsStateWithLifecycle()
+    val statistics by settingsViewModel.statistics.collectAsStateWithLifecycle()
+    if (!layers.limiteAdministrative && statistics == Statistics.None) return
     val adminPublicSource = rememberVectorTileSource(
         tiles = listOf(
             "https://openmaptiles.data.gouv.fr/data/decoupage-administratif/{z}/{x}/{y}.pbf"
@@ -51,6 +60,11 @@ fun AdminLayer(
             "http://192.168.1.34:4000/arrondissements_admin/{z}/{x}/{y}.pbf",
         )
     )
+    val adminArrondissementsMunicipalSource = rememberVectorTileSource(
+        tiles = listOf(
+            "http://192.168.1.34:4000/arrondissements_municipal_admin/{z}/{x}/{y}.pbf",
+        )
+    )
     val adminCommuesSource = rememberVectorTileSource(
         tiles = listOf(
             "http://192.168.1.34:4000/communes_admin/{z}/{x}/{y}.pbf",
@@ -62,118 +76,74 @@ fun AdminLayer(
             "http://192.168.1.34:4000/iris/{z}/{x}/{y}.pbf",
         )
     )
+    val defaultOnClick: FeaturesClickHandler = { features ->
+        Log.d("ARASH", features[0].properties.toString())
 
-    LineLayer(
-        id = "admin-border-regions",
-        //source = adminRegionsSource,
-        source = adminPublicSource,
-        sourceLayer = "regions",
-        width = const(2.dp),
-        color = const(Color.Black),
-        minZoom = 4f,
-        maxZoom = 6f
-    )
-    FillLayer(
-        id = "admin-fill-regions",
-        source = adminPublicSource,
+        val centerLat = ((features[0].properties?.get("center_lat") ?: 0) as JsonPrimitive).content.toDouble()
+        val centerLong = ((features[0].properties?.get("center_long") ?: 0) as JsonPrimitive).content.toDouble()
+        scope.launch {
+            mapState.animateCameraPosition(
+                CameraPosition(
+                    target = Position(longitude = centerLong, latitude = centerLat),
+                    zoom = mapState.cameraPosition.zoom + 2.0
+                ), duration = 500.milliseconds
+            )
+        }
+        ClickResult.Consume
+    }
+
+    BorderLayer(
+        id = "admin-regions",
+        borders = layers.limiteAdministrative,
+        source = adminRegionsSource,
         sourceLayer = "regions",
         minZoom = 4f,
         maxZoom = 6f,
-        opacity = const(0f),
-        onClick = { features ->
-            val polygon = (features[0].geometry as? Polygon) ?: return@FillLayer ClickResult.Pass
-            val coordinates = polygon.coordinates.firstOrNull() ?: return@FillLayer ClickResult.Pass
-
-            scope.launch {
-                mapState.animateCameraPosition(CameraPosition(target = center(coordinates), zoom = mapState.cameraPosition.zoom + 2.0), duration = 500.milliseconds)
-            }
-            ClickResult.Consume
-        }
+        statistics = statistics,
+        onClick = defaultOnClick
     )
 
-    LineLayer(
-        id = "admin-border-departements",
-        //source = adminDepartementsSource,
-        source = adminPublicSource,
-        sourceLayer = "departements",
-        width = const(2.dp),
-        color = const(Color.Black),
-        minZoom = 6f,
-        maxZoom = 10f
-    )
-    FillLayer(
-        id = "admin-fill-departements",
-        source = adminPublicSource,
+    BorderLayer(
+        id = "admin-departements",
+        borders = layers.limiteAdministrative,
+        source = adminDepartementsSource,
         sourceLayer = "departements",
         minZoom = 6f,
         maxZoom = 10f,
-        opacity = const(0f),
-        onClick = { features ->
-            val polygon = (features[0].geometry as? Polygon) ?: return@FillLayer ClickResult.Pass
-            val coordinates = polygon.coordinates.firstOrNull() ?: return@FillLayer ClickResult.Pass
-
-            scope.launch {
-                mapState.animateCameraPosition(CameraPosition(target = center(coordinates), zoom = mapState.cameraPosition.zoom + 2.0), duration = 500.milliseconds)
-            }
-            ClickResult.Consume
-        }
+        statistics = statistics,
+        onClick = defaultOnClick
     )
 
-    LineLayer(
-        id = "admin-border-communes",
-        //source = adminCommuesSource,
-        source = adminPublicSource,
+    BorderLayer(
+        id = "admin-communes",
+        borders = layers.limiteAdministrative,
+        source = adminCommuesSource,
         sourceLayer = "communes",
-        width = const(2.dp),
-        color = const(Color.Black),
         minZoom = 10f,
-        maxZoom = 12f
-    )
-    FillLayer(
-        id = "admin-fill-communes",
-        source = adminPublicSource,
-        sourceLayer = "communes",
-        minZoom =10f,
-        maxZoom = 12f,
-        opacity = const(0f),
-        onClick = { features ->
-            val polygon = (features[0].geometry as? Polygon) ?: return@FillLayer ClickResult.Pass
-            val coordinates = polygon.coordinates.firstOrNull() ?: return@FillLayer ClickResult.Pass
-
-            scope.launch {
-                mapState.animateCameraPosition(CameraPosition(target = center(coordinates), zoom = mapState.cameraPosition.zoom + 2.0), duration = 500.milliseconds)
-            }
-            ClickResult.Consume
-        }
+        maxZoom = 15f,
+        statistics = statistics,
+        onClick = defaultOnClick
     )
 
-/*
-    LineLayer(
-        id = "admin-border-mairies",
-        //source = adminCommuesSource,
-        source = adminPublicSource,
-        sourceLayer = "mairies",
-        width = const(3.dp),
-        color = const(Color.Yellow),
-        //minZoom = 12f,
-        //maxZoom = 16f
+    BorderLayer(
+        id = "admin-arrondissements-municipal",
+        borders = layers.limiteAdministrative,
+        source = adminArrondissementsMunicipalSource,
+        sourceLayer = "arrondissements_municipal",
+        minZoom = 10f,
+        maxZoom = 13f,
+        statistics = statistics,
+        onClick = defaultOnClick
     )
-*/
 
-    LineLayer(
-        id = "admin-border-iris",
+    BorderLayer(
+        id = "admin-iris",
+        borders = layers.limiteAdministrative,
         source = irisSource,
         sourceLayer = "iris",
-        width = const(2.dp),
-        color = const(Color.Black),
-        minZoom = 12f,
-    )
-    FillLayer(
-        id = "admin-fill-iris",
-        source = irisSource,
-        sourceLayer = "iris",
-        minZoom =12f,
-        opacity = const(0f),
+        minZoom = 13f,
+        maxZoom = 16f,
+        statistics = statistics,
         onClick = { features ->
             Log.d("ARASH", features[0].properties.toString())
             val irisInfo = MapViewModel.IrisInfo(
@@ -186,14 +156,124 @@ fun AdminLayer(
             ClickResult.Consume
         }
     )
-
 }
 
-private fun center(coordinates: List<Position>): Position {
-    val minLon = coordinates.minOf { it.longitude }
-    val maxLon = coordinates.maxOf { it.longitude }
-    val minLat = coordinates.minOf { it.latitude }
-    val maxLat = coordinates.maxOf { it.latitude }
 
-    return Position(longitude = (minLon+maxLon)/2.0, latitude = (minLat+maxLat)/2.0)
+@Composable
+fun BorderLayer(
+    id: String,
+    borders: Boolean,
+    source: VectorTileSource,
+    sourceLayer: String,
+    minZoom: Float,
+    maxZoom: Float,
+    statistics: Statistics,
+    onClick: FeaturesClickHandler? = null,
+) {
+    when (statistics) {
+        Statistics.None -> FillLayer(
+            id = "$id-fill",
+            source = source,
+            sourceLayer = sourceLayer,
+            minZoom = minZoom,
+            maxZoom = maxZoom,
+            opacity = const(0f),
+            onClick = onClick
+        )
+        Statistics.Poverty -> ScoreLayer(
+            id = "$id-fill",
+            source = source,
+            sourceLayer = sourceLayer,
+            featureName = "poverty_score",
+            minZoom = minZoom,
+            maxZoom = maxZoom,
+            onClick = onClick
+        )
+        Statistics.Population -> ScoreLayer(
+            id = "$id-fill",
+            source = source,
+            sourceLayer = sourceLayer,
+            featureName = "population_score",
+            minZoom = minZoom,
+            maxZoom = maxZoom,
+            onClick = onClick
+        )
+    }
+
+    if (borders) {
+        LineLayer(
+            id = "$id-border",
+            source = source,
+            sourceLayer = sourceLayer,
+            width = const(2.dp),
+            color = const(Color.Black),
+            minZoom = minZoom,
+            maxZoom = maxZoom
+        )
+    }
+}
+
+@Composable
+fun ScoreLayer(
+    id: String,
+    source: VectorTileSource,
+    sourceLayer: String,
+    featureName: String,
+    minZoom: Float,
+    maxZoom: Float,
+    onClick: FeaturesClickHandler? = null,
+) {
+    FillLayer(
+        id = "$id-fill",
+        source = source,
+        sourceLayer = sourceLayer,
+        minZoom = minZoom,
+        maxZoom = maxZoom,
+        color = switch(
+            input = feature[featureName],
+            case(
+                label = 1,
+                output = const(Color(0xFF, 0xF5, 0xF0))
+            ),
+            case(
+                label = 2,
+                output = const(Color(0xFE, 0xE0, 0xD2))
+            ),
+            case(
+                label = 3,
+                output = const(Color(0xFC, 0xC5, 0xC0))
+            ),
+            case(
+                label = 4,
+                output = const(Color(0xFA, 0x9F, 0xB5))
+            ),
+            case(
+                label = 5,
+                output = const(Color(0xF7, 0x68, 0xA1))
+            ),
+            case(
+                label = 6,
+                output = const(Color(0xDD, 0x34, 0x97))
+            ),
+            case(
+                label = 7,
+                output = const(Color(0xAE, 0x01, 0x7E))
+            ),
+            case(
+                label = 8,
+                output = const(Color(0x7A, 0x01, 0x77))
+            ),
+            case(
+                label = 9,
+                output = const(Color(0x49, 0x00, 0x6A))
+            ),
+            case(
+                label = 10,
+                output = const(Color(0x24, 0x00, 0x3D))
+            ),
+            fallback = const(Color.White)
+        ),
+        opacity = const(0.7f),
+        onClick = onClick
+    )
 }

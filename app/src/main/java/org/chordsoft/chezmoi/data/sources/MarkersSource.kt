@@ -35,5 +35,6 @@ class MarkersSource(private val context: Context): MutableDataSetSource<Markers>
 data class Markers(
     val rpls: Boolean = false,
     val permis: Boolean = false,
-    val valeurFonciere: Boolean = false
+    val valeurFonciere: Boolean = false,
+    val powerLines: Boolean = false
 )

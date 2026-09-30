@@ -36,6 +36,7 @@ import org.chordsoft.chezmoi.ui.dialogs.SearchAddressDialog
 import org.chordsoft.chezmoi.ui.dialogs.SettingsDialog
 import org.chordsoft.chezmoi.ui.layers.AdminLayer
 import org.chordsoft.chezmoi.ui.layers.CadastreLayer
+import org.chordsoft.chezmoi.ui.layers.ElectricityLayer
 import org.chordsoft.chezmoi.ui.layers.PermisLayer
 import org.chordsoft.chezmoi.ui.layers.RplsLayer
 import org.chordsoft.chezmoi.ui.layers.ValeurFonciereLayer
@@ -100,9 +101,9 @@ fun MainScreen(
         val mapState = checkNotNull(LocalMapState.current)
 
         AdminLayer(
-            visible = layers.limiteAdministrative,
             mapState = mapState,
             mapViewModel = mapViewModel,
+            settingsViewModel = settingsViewModel,
             onIrisClick = {
                 showIrisInfoDialog = true
             }
@@ -142,6 +143,12 @@ fun MainScreen(
             onMarkerClick = {
                 showMarkerInfoDialog = true
             }
+        )
+
+        ElectricityLayer(
+            visible = markers.powerLines,
+            mapViewModel = mapViewModel,
+            settingsViewModel = settingsViewModel
         )
 
         LocationPuck(

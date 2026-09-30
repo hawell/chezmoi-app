@@ -16,6 +16,8 @@ import org.chordsoft.chezmoi.data.sources.LayersSource
 import org.chordsoft.chezmoi.data.sources.Markers
 import org.chordsoft.chezmoi.data.sources.MarkersSource
 import org.chordsoft.chezmoi.data.sources.MutableDataSetSource
+import org.chordsoft.chezmoi.data.sources.Statistics
+import org.chordsoft.chezmoi.data.sources.StatisticsSource
 import org.chordsoft.chezmoi.data.sources.Style
 import org.chordsoft.chezmoi.data.sources.StyleSource
 
@@ -62,6 +64,20 @@ class SettingsViewModel(context: Context): ViewModel() {
             )
     suspend fun setStyle(newStyle: Style) {
         _style.set(newStyle)
+    }
+
+    private val _statistics: MutableDataSetSource<Statistics> = StatisticsSource(context)
+    val statistics: StateFlow<Statistics> =
+        _statistics.flow.map { it }
+            .onStart { Statistics.None }
+            .catch { Statistics.None }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5000),
+                initialValue = Statistics.None
+            )
+    suspend fun setStatistics(newStatistics: Statistics) {
+        _statistics.set(newStatistics)
     }
 
     companion object {

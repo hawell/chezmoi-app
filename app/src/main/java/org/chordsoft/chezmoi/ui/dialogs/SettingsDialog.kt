@@ -24,7 +24,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
 import org.chordsoft.chezmoi.R
-import org.chordsoft.chezmoi.data.sources.mapStyles
+import org.chordsoft.chezmoi.data.sources.basicMapStyles
 import org.chordsoft.chezmoi.viewmodel.SettingsViewModel
 
 @Composable
@@ -65,7 +65,7 @@ fun SettingsDialog(
                     horizontalAlignment = Alignment.Start,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    mapStyles.forEach { (name, item) ->
+                    basicMapStyles.forEach { (name, item) ->
                         Row(
                             horizontalArrangement = Arrangement.Start,
                             verticalAlignment = Alignment.CenterVertically
