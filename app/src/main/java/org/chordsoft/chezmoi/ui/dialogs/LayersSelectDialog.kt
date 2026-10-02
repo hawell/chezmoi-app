@@ -8,7 +8,9 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
@@ -76,6 +78,18 @@ fun LayersSelectDialog(
             get = { markers.powerLines },
             set = { scope.launch { settingsViewModel.setMarkers(markers.copy(powerLines = !markers.powerLines))} }
         ),
+        SelectItem(
+            name = "Gazoduc",
+            icon = R.drawable.valve_24px,
+            get = { markers.gas },
+            set = { scope.launch { settingsViewModel.setMarkers(markers.copy(gas = !markers.gas))} }
+        ),
+        SelectItem(
+            name = "Installations industrielles",
+            icon = R.drawable.factory_24px,
+            get = { markers.factories },
+            set = { scope.launch { settingsViewModel.setMarkers(markers.copy(factories = !markers.factories))} }
+        ),
     )
     val markerItems = listOf(
         SelectItem(
@@ -127,14 +141,14 @@ fun LayersSelectDialog(
                 .padding(8.dp),
             shape = RoundedCornerShape(16.dp)
         ) {
-            markerItems.forEach { item ->
-                MarkerToggle(item)
-            }
             Column(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxSize().verticalScroll(state = rememberScrollState())
             ) {
+                markerItems.forEach { item ->
+                    MarkerToggle(item)
+                }
                 ToggleGroup(
                     title = "limites territoriales",
                     icon = R.drawable.outdoor_garden_24px,

@@ -21,17 +21,16 @@ import org.maplibre.compose.expressions.dsl.switch
 import org.maplibre.compose.interaction.ClickResult
 import org.maplibre.compose.layers.FeaturesClickHandler
 import org.maplibre.compose.layers.FillLayer
-import org.maplibre.compose.layers.HeatmapLayer
 import org.maplibre.compose.layers.LineLayer
 import org.maplibre.compose.map.MapState
 import org.maplibre.compose.sources.VectorTileSource
-import org.maplibre.compose.sources.rememberVectorTileSource
 import org.maplibre.spatialk.geojson.Position
 import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
 fun AdminLayer(
     mapViewModel: MapViewModel,
+    sources:  Map<String, VectorTileSource>,
     settingsViewModel: SettingsViewModel,
     mapState: MapState,
     onIrisClick: () -> Unit
@@ -40,42 +39,7 @@ fun AdminLayer(
     val layers by settingsViewModel.layers.collectAsStateWithLifecycle()
     val statistics by settingsViewModel.statistics.collectAsStateWithLifecycle()
     if (!layers.limiteAdministrative && statistics == Statistics.None) return
-    val adminPublicSource = rememberVectorTileSource(
-        tiles = listOf(
-            "https://openmaptiles.data.gouv.fr/data/decoupage-administratif/{z}/{x}/{y}.pbf"
-        )
-    )
-    val adminRegionsSource = rememberVectorTileSource(
-        tiles = listOf(
-            "http://192.168.1.34:4000/regions_admin/{z}/{x}/{y}.pbf",
-        )
-    )
-    val adminDepartementsSource = rememberVectorTileSource(
-        tiles = listOf(
-            "http://192.168.1.34:4000/departements_admin/{z}/{x}/{y}.pbf",
-        )
-    )
-    val adminArrondissementsSource = rememberVectorTileSource(
-        tiles = listOf(
-            "http://192.168.1.34:4000/arrondissements_admin/{z}/{x}/{y}.pbf",
-        )
-    )
-    val adminArrondissementsMunicipalSource = rememberVectorTileSource(
-        tiles = listOf(
-            "http://192.168.1.34:4000/arrondissements_municipal_admin/{z}/{x}/{y}.pbf",
-        )
-    )
-    val adminCommuesSource = rememberVectorTileSource(
-        tiles = listOf(
-            "http://192.168.1.34:4000/communes_admin/{z}/{x}/{y}.pbf",
-        )
-    )
 
-    val irisSource = rememberVectorTileSource(
-        tiles = listOf(
-            "http://192.168.1.34:4000/iris/{z}/{x}/{y}.pbf",
-        )
-    )
     val defaultOnClick: FeaturesClickHandler = { features ->
         Log.d("ARASH", features[0].properties.toString())
 
@@ -95,7 +59,7 @@ fun AdminLayer(
     BorderLayer(
         id = "admin-regions",
         borders = layers.limiteAdministrative,
-        source = adminRegionsSource,
+        source = sources["regions_admin"]!!,
         sourceLayer = "regions",
         minZoom = 4f,
         maxZoom = 6f,
@@ -106,7 +70,7 @@ fun AdminLayer(
     BorderLayer(
         id = "admin-departements",
         borders = layers.limiteAdministrative,
-        source = adminDepartementsSource,
+        source = sources["departements_admin"]!!,
         sourceLayer = "departements",
         minZoom = 6f,
         maxZoom = 10f,
@@ -117,7 +81,7 @@ fun AdminLayer(
     BorderLayer(
         id = "admin-communes",
         borders = layers.limiteAdministrative,
-        source = adminCommuesSource,
+        source = sources["communes_admin"]!!,
         sourceLayer = "communes",
         minZoom = 10f,
         maxZoom = 15f,
@@ -128,7 +92,7 @@ fun AdminLayer(
     BorderLayer(
         id = "admin-arrondissements-municipal",
         borders = layers.limiteAdministrative,
-        source = adminArrondissementsMunicipalSource,
+        source = sources["arrondissements_municipal_admin"]!!,
         sourceLayer = "arrondissements_municipal",
         minZoom = 10f,
         maxZoom = 13f,
@@ -139,7 +103,7 @@ fun AdminLayer(
     BorderLayer(
         id = "admin-iris",
         borders = layers.limiteAdministrative,
-        source = irisSource,
+        source = sources["iris"]!!,
         sourceLayer = "iris",
         minZoom = 13f,
         maxZoom = 16f,

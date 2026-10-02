@@ -36,5 +36,7 @@ data class Markers(
     val rpls: Boolean = false,
     val permis: Boolean = false,
     val valeurFonciere: Boolean = false,
-    val powerLines: Boolean = false
+    val powerLines: Boolean = false,
+    val gas: Boolean = false,
+    val factories: Boolean = false,
 )

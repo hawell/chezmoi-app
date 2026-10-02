@@ -8,22 +8,18 @@ import org.maplibre.compose.expressions.dsl.const
 import org.maplibre.compose.interaction.ClickResult
 import org.maplibre.compose.layers.FillLayer
 import org.maplibre.compose.layers.LineLayer
-import org.maplibre.compose.sources.rememberVectorTileSource
+import org.maplibre.compose.sources.VectorTileSource
 import org.maplibre.spatialk.geojson.Feature.Companion.getStringProperty
 
 @Composable
 fun CadastreLayer(
     visible: Boolean,
+    sources:  Map<String, VectorTileSource>,
     mapViewModel: MapViewModel,
     onMarkerClick: () -> Unit
 ) {
     if (!visible) return
-    val source = rememberVectorTileSource(
-        tiles = listOf(
-            "http://192.168.1.34:4000/cadastre/{z}/{x}/{y}.pbf"
-        )
-    )
-
+    val source = sources["cadastre"]!!
     LineLayer(
         id = "cadastre-batiments-line",
         source = source,

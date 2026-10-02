@@ -15,13 +15,15 @@ import org.chordsoft.chezmoi.viewmodel.MapViewModel
 import org.chordsoft.chezmoi.viewmodel.SettingsViewModel
 import org.maplibre.compose.expressions.dsl.const
 import org.maplibre.compose.expressions.dsl.image
+import org.maplibre.compose.expressions.value.SymbolAnchor
 import org.maplibre.compose.interaction.ClickResult
 import org.maplibre.compose.layers.SymbolLayer
-import org.maplibre.compose.sources.rememberVectorTileSource
+import org.maplibre.compose.sources.VectorTileSource
 
 @Composable
 fun PermisLayer(
     visible: Boolean,
+    sources:  Map<String, VectorTileSource>,
     mapViewModel: MapViewModel,
     settingsViewModel: SettingsViewModel,
     onMarkerClick: () -> Unit
@@ -61,26 +63,10 @@ fun PermisLayer(
         ).asImageBitmap()
     }
 
-    val permisAmenagerSource = rememberVectorTileSource(
-        tiles = listOf(
-            "http://192.168.1.34:4000/permis_amenager/{z}/{x}/{y}.pbf",
-        )
-    )
-    val permisDemolirSource = rememberVectorTileSource(
-        tiles = listOf(
-            "http://192.168.1.34:4000/permis_demolir/{z}/{x}/{y}.pbf",
-        )
-    )
-    val permisConstruireNonResidentielsSource = rememberVectorTileSource(
-        tiles = listOf(
-            "http://192.168.1.34:4000/permis_construire_non_residentiels/{z}/{x}/{y}.pbf",
-        )
-    )
-    val PermisConstruireResidentielsSource = rememberVectorTileSource(
-        tiles = listOf(
-            "http://192.168.1.34:4000/permis_construire_residentiels/{z}/{x}/{y}.pbf",
-        )
-    )
+    val permisAmenagerSource = sources["permis_amenager"]!!
+    val permisDemolirSource = sources["permis_demolir"]!!
+    val permisConstruireNonResidentielsSource = sources["permis_construire_non_residentiels"]!!
+    val PermisConstruireResidentielsSource = sources["permis_construire_residentiels"]!!
 
     SymbolLayer(
         id = "permis-amenager-symbols",
@@ -89,6 +75,7 @@ fun PermisLayer(
         minZoom = minZoom,
 
         iconImage = image(amenagerImage),
+        iconAnchor = const(SymbolAnchor.Bottom),
         iconAllowOverlap = const(true),
         iconIgnorePlacement = const(true),
 
@@ -134,6 +121,7 @@ fun PermisLayer(
         minZoom = minZoom,
 
         iconImage = image(demolirImage),
+        iconAnchor = const(SymbolAnchor.Bottom),
         iconAllowOverlap = const(true),
         iconIgnorePlacement = const(true),
 
@@ -179,6 +167,7 @@ fun PermisLayer(
         minZoom = minZoom,
 
         iconImage = image(construireNonResidentielImage),
+        iconAnchor = const(SymbolAnchor.Bottom),
         iconAllowOverlap = const(true),
         iconIgnorePlacement = const(true),
 
@@ -224,6 +213,7 @@ fun PermisLayer(
         minZoom = minZoom,
 
         iconImage = image(construireLogementImage),
+        iconAnchor = const(SymbolAnchor.Bottom),
         iconAllowOverlap = const(true),
         iconIgnorePlacement = const(true),
 

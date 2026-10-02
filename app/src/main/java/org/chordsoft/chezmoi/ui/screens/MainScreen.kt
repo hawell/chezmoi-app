@@ -37,6 +37,8 @@ import org.chordsoft.chezmoi.ui.dialogs.SettingsDialog
 import org.chordsoft.chezmoi.ui.layers.AdminLayer
 import org.chordsoft.chezmoi.ui.layers.CadastreLayer
 import org.chordsoft.chezmoi.ui.layers.ElectricityLayer
+import org.chordsoft.chezmoi.ui.layers.FactoriesLayer
+import org.chordsoft.chezmoi.ui.layers.GasLayer
 import org.chordsoft.chezmoi.ui.layers.PermisLayer
 import org.chordsoft.chezmoi.ui.layers.RplsLayer
 import org.chordsoft.chezmoi.ui.layers.ValeurFonciereLayer
@@ -55,6 +57,7 @@ import org.maplibre.compose.map.LocalMapState
 import org.maplibre.compose.map.MaplibreMap
 import org.maplibre.compose.map.rememberMapState
 import org.maplibre.compose.overlay.ScaleBar
+import org.maplibre.compose.sources.rememberVectorTileSource
 import org.maplibre.compose.style.BaseStyle
 import org.maplibre.spatialk.geojson.BoundingBox
 import org.maplibre.spatialk.geojson.Position
@@ -79,6 +82,7 @@ fun MainScreen(
             headingProvider = headingProvider,
         )
 
+
     var showSearchAddressDialog by remember { mutableStateOf(false) }
     var showMarkerInfoDialog by remember { mutableStateOf(false) }
     var showLayersSelectDialog by remember { mutableStateOf(false) }
@@ -99,9 +103,21 @@ fun MainScreen(
         initialCameraPosition = CameraPosition(target = paris, zoom = 8.0)
     ) {
         val mapState = checkNotNull(LocalMapState.current)
+        val sources = listOf(
+            "regions_admin", "regions_admin", "departements_admin", "arrondissements_admin", "arrondissements_municipal_admin",
+            "communes_admin", "iris", "cadastre", "electricity", "permis_amenager", "permis_demolir", "permis_construire_non_residentiels",
+            "permis_construire_residentiels", "rpls", "valeur_fonciere", "gas", "installations_industrielles"
+        ).associateWith { sourceName ->
+            rememberVectorTileSource(
+                tiles = listOf(
+                    "http://192.168.1.34:4000/$sourceName/{z}/{x}/{y}.pbf"
+                )
+            )
+        }
 
         AdminLayer(
             mapState = mapState,
+            sources = sources,
             mapViewModel = mapViewModel,
             settingsViewModel = settingsViewModel,
             onIrisClick = {
@@ -111,6 +127,7 @@ fun MainScreen(
 
         CadastreLayer(
             visible = layers.cadastre,
+            sources = sources,
             mapViewModel = mapViewModel,
             onMarkerClick = {
                 showMarkerInfoDialog = true
@@ -120,6 +137,7 @@ fun MainScreen(
         RplsLayer(
             visible = markers.rpls,
             mapState = mapState,
+            sources = sources,
             mapViewModel = mapViewModel,
             settingsViewModel = settingsViewModel,
             onMarkerClick = {
@@ -129,6 +147,7 @@ fun MainScreen(
 
         PermisLayer(
             visible = markers.permis,
+            sources = sources,
             mapViewModel = mapViewModel,
             settingsViewModel = settingsViewModel,
             onMarkerClick = {
@@ -138,6 +157,7 @@ fun MainScreen(
 
         ValeurFonciereLayer(
             visible = markers.valeurFonciere,
+            sources = sources,
             mapViewModel = mapViewModel,
             settingsViewModel = settingsViewModel,
             onMarkerClick = {
@@ -147,6 +167,21 @@ fun MainScreen(
 
         ElectricityLayer(
             visible = markers.powerLines,
+            sources = sources,
+            mapViewModel = mapViewModel,
+            settingsViewModel = settingsViewModel
+        )
+
+        GasLayer(
+            visible = markers.gas,
+            sources = sources,
+            mapViewModel = mapViewModel,
+            settingsViewModel = settingsViewModel
+        )
+
+        FactoriesLayer(
+            visible = markers.factories,
+            sources = sources,
             mapViewModel = mapViewModel,
             settingsViewModel = settingsViewModel
         )

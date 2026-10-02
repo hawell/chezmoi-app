@@ -50,7 +50,7 @@ interface ApiService {
         zoom: Float
     ): ApiResponse<List<HlmData.HlmCity>>
 
-    @GET("rpls")
+    @GET("rpls_clusters")
     suspend fun getRpls(
         @Query("south")
         south: Double,

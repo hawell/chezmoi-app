@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="64dp"
+    android:viewportWidth="48"
+    android:viewportHeight="64">
+
+    <!-- Pin -->
+    <path
+        android:fillColor="#222222"
+        android:pathData="
+            M24,63
+            C23.4,61.8 5,37.2 5,24
+            C5,13.5 13.5,5 24,5
+            C34.5,5 43,13.5 43,24
+            C43,37.2 24.6,61.8 24,63
+            Z" />
+
+    <!-- White circular area for the icon -->
+    <path
+        android:fillColor="#5F6368"
+        android:pathData="
+            M24,10
+            A14,14 0,1 0,24,38
+            A14,14 0,1 0,24,10
+            Z" />
+
+</vector>

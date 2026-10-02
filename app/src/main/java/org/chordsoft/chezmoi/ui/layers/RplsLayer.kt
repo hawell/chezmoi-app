@@ -1,5 +1,6 @@
 package org.chordsoft.chezmoi.ui.layers
 
+import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -11,24 +12,24 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.int
 import org.chordsoft.chezmoi.R
-import org.chordsoft.chezmoi.data.sources.SourceState
 import org.chordsoft.chezmoi.ui.components.createMarkerBitmap
 import org.chordsoft.chezmoi.viewmodel.MapViewModel
 import org.chordsoft.chezmoi.viewmodel.SettingsViewModel
 import org.maplibre.compose.camera.CameraPosition
-import org.maplibre.compose.layers.SymbolLayer
-import org.maplibre.compose.sources.GeoJsonData
-import org.maplibre.compose.sources.rememberGeoJsonSource
-import org.maplibre.compose.expressions.dsl.*
+import org.maplibre.compose.expressions.dsl.case
+import org.maplibre.compose.expressions.dsl.const
+import org.maplibre.compose.expressions.dsl.feature
+import org.maplibre.compose.expressions.dsl.format
+import org.maplibre.compose.expressions.dsl.image
+import org.maplibre.compose.expressions.dsl.span
+import org.maplibre.compose.expressions.dsl.switch
 import org.maplibre.compose.expressions.value.SymbolAnchor
 import org.maplibre.compose.expressions.value.TextJustify
 import org.maplibre.compose.interaction.ClickResult
+import org.maplibre.compose.layers.SymbolLayer
 import org.maplibre.compose.map.MapState
-import org.maplibre.spatialk.geojson.FeatureCollection
-import org.maplibre.spatialk.geojson.Geometry
+import org.maplibre.compose.sources.VectorTileSource
 import org.maplibre.spatialk.geojson.Point
 import org.maplibre.spatialk.geojson.Position
 
@@ -36,6 +37,7 @@ import org.maplibre.spatialk.geojson.Position
 fun RplsLayer(
     visible: Boolean,
     mapState: MapState,
+    sources:  Map<String, VectorTileSource>,
     mapViewModel: MapViewModel,
     settingsViewModel: SettingsViewModel,
     onMarkerClick: () -> Unit
@@ -52,20 +54,13 @@ fun RplsLayer(
             iconRes = R.drawable.shield_with_house_24px,
         ).asImageBitmap()
     }
-    val data = when (val currentState = state) {
-        is SourceState.Success<String> ->
-            GeoJsonData.JsonString(currentState.data)
+    val rplsTileSource = sources["rpls"]!!
 
-        else ->
-            GeoJsonData.Features(
-                FeatureCollection<Geometry, JsonObject?>(emptyList())
-            )
-    }
-
-    val source = rememberGeoJsonSource(data = data)
     SymbolLayer(
         id = "rpls-symbols",
-        source = source,
+        source = rplsTileSource,
+        sourceLayer = "rpls",
+        minZoom = 10f,
 
         iconImage = switch(
             input = feature["count"],
@@ -74,6 +69,14 @@ fun RplsLayer(
                 output = image(rplsImage),
             ),
             fallback = image(painterResource(R.drawable.ic_cluster_circle)),
+        ),
+        iconAnchor = switch(
+            input = feature["count"],
+            case(
+                label = 1,
+                output = const(SymbolAnchor.Bottom)
+            ),
+            fallback = const(SymbolAnchor.Center)
         ),
         iconAllowOverlap = const(true),
         iconIgnorePlacement = const(true),
@@ -98,7 +101,8 @@ fun RplsLayer(
             fallback = const(1f)
         ),
         onClick = { features ->
-            val count = features[0].properties?.get("count").toString().toInt()
+            val count = features[0].properties?.get("count").toString().toIntOrNull() ?: 1
+            Log.d("ARASH", features[0].properties.toString())
             if (count > 1) {
                 if (features[0].geometry is Point) {
                     val point = features[0].geometry as Point
@@ -113,7 +117,7 @@ fun RplsLayer(
                 }
             } else {
                 scope.launch {
-                    val id = features[0].id?.int ?: 0
+                    val id = features[0].properties?.get("id")?.toString()?.toIntOrNull() ?: 0
                     val details = mapViewModel.getRplsDetails(id)
                     details?.let {
                         mapViewModel.updateMarkerInfo(
