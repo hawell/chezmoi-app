@@ -40,6 +40,7 @@ fun MarkerInfoDialog(
             MapViewModel.MarkerType.RplsMarker -> Pair("Logement Sociaux", R.drawable.shield_with_house_24px)
             MapViewModel.MarkerType.Permis -> Pair("Permis", R.drawable.approval_24px)
             MapViewModel.MarkerType.ValeurFonciere -> Pair("Valeur Fonciere", R.drawable.euro_symbol_24px)
+            MapViewModel.MarkerType.PollutedSite -> Pair("Sites pollués", R.drawable.dangerous_24px)
             MapViewModel.MarkerType.Unknown -> Pair("Loading...", R.drawable.hourglass_top_24px)
         }
         Card(

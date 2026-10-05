@@ -39,4 +39,6 @@ data class Markers(
     val powerLines: Boolean = false,
     val gas: Boolean = false,
     val factories: Boolean = false,
+    val culture: Boolean = false,
+    val pollution: Boolean = false,
 )

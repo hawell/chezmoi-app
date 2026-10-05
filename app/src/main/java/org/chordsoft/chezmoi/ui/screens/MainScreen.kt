@@ -19,7 +19,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -36,10 +35,12 @@ import org.chordsoft.chezmoi.ui.dialogs.SearchAddressDialog
 import org.chordsoft.chezmoi.ui.dialogs.SettingsDialog
 import org.chordsoft.chezmoi.ui.layers.AdminLayer
 import org.chordsoft.chezmoi.ui.layers.CadastreLayer
+import org.chordsoft.chezmoi.ui.layers.CultureLayer
 import org.chordsoft.chezmoi.ui.layers.ElectricityLayer
 import org.chordsoft.chezmoi.ui.layers.FactoriesLayer
 import org.chordsoft.chezmoi.ui.layers.GasLayer
 import org.chordsoft.chezmoi.ui.layers.PermisLayer
+import org.chordsoft.chezmoi.ui.layers.PollutionLayer
 import org.chordsoft.chezmoi.ui.layers.RplsLayer
 import org.chordsoft.chezmoi.ui.layers.ValeurFonciereLayer
 import org.chordsoft.chezmoi.viewmodel.MapViewModel
@@ -72,7 +73,6 @@ fun MainScreen(
     settingsViewModel: SettingsViewModel
 ) {
     val scope = rememberCoroutineScope()
-    val context = LocalContext.current
     val markerInfoState = mapViewModel.markerInfo
     val locationProvider = rememberDefaultLocationProvider()
     val headingProvider = rememberDefaultHeadingProvider()
@@ -106,7 +106,8 @@ fun MainScreen(
         val sources = listOf(
             "regions_admin", "regions_admin", "departements_admin", "arrondissements_admin", "arrondissements_municipal_admin",
             "communes_admin", "iris", "cadastre", "electricity", "permis_amenager", "permis_demolir", "permis_construire_non_residentiels",
-            "permis_construire_residentiels", "rpls", "valeur_fonciere", "gas", "installations_industrielles"
+            "permis_construire_residentiels", "rpls", "valeur_fonciere", "gas", "installations_industrielles", "culture",
+            "polluted_sites"
         ).associateWith { sourceName ->
             rememberVectorTileSource(
                 tiles = listOf(
@@ -114,7 +115,6 @@ fun MainScreen(
                 )
             )
         }
-
         AdminLayer(
             mapState = mapState,
             sources = sources,
@@ -127,6 +127,15 @@ fun MainScreen(
 
         CadastreLayer(
             visible = layers.cadastre,
+            sources = sources,
+            mapViewModel = mapViewModel,
+            onMarkerClick = {
+                showMarkerInfoDialog = true
+            }
+        )
+
+        PollutionLayer(
+            visible = markers.pollution,
             sources = sources,
             mapViewModel = mapViewModel,
             onMarkerClick = {
@@ -184,6 +193,14 @@ fun MainScreen(
             sources = sources,
             mapViewModel = mapViewModel,
             settingsViewModel = settingsViewModel
+        )
+
+        CultureLayer(
+            visible = markers.culture,
+            mapState = mapState,
+            sources = sources,
+            mapViewModel = mapViewModel,
+            settingsViewModel = settingsViewModel,
         )
 
         LocationPuck(
@@ -316,7 +333,9 @@ fun MainScreen(
             )
         }
         if (showMarkerInfoDialog) {
-            MarkerInfoDialog(markerInfoState, { showMarkerInfoDialog = false })
+            MarkerInfoDialog(
+                markerInfoState = markerInfoState,
+                onDismiss = { showMarkerInfoDialog = false })
         }
         if (showLayersSelectDialog) {
             LayersSelectDialog(

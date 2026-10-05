@@ -29,7 +29,8 @@ class MapViewModel: ViewModel() {
         RplsMarker,
         CadastreParcelle,
         ValeurFonciere,
-        Permis
+        Permis,
+        PollutedSite,
     }
 
     data class MarkerInfoItem(

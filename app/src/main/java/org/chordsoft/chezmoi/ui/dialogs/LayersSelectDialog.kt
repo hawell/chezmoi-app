@@ -90,6 +90,12 @@ fun LayersSelectDialog(
             get = { markers.factories },
             set = { scope.launch { settingsViewModel.setMarkers(markers.copy(factories = !markers.factories))} }
         ),
+        SelectItem(
+            name = "Sites pollués",
+            icon = R.drawable.dangerous_24px,
+            get = { markers.pollution },
+            set = { scope.launch { settingsViewModel.setMarkers(markers.copy(pollution = !markers.pollution))} }
+        ),
     )
     val markerItems = listOf(
         SelectItem(
@@ -103,7 +109,13 @@ fun LayersSelectDialog(
             icon = R.drawable.euro_symbol_24px,
             get = { markers.valeurFonciere },
             set = { scope.launch { settingsViewModel.setMarkers(markers.copy(valeurFonciere = !markers.valeurFonciere))} }
-        )
+        ),
+        SelectItem(
+            name = "Lieux culturels",
+            icon = R.drawable.history_edu_24px,
+            get = { markers.culture },
+            set = { scope.launch { settingsViewModel.setMarkers(markers.copy(culture = !markers.culture))} }
+        ),
     )
     val mapStyles = basicMapStyles.map { (name, style) ->
         SelectItem(
