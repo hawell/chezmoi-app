@@ -36,6 +36,7 @@ import org.chordsoft.chezmoi.ui.dialogs.SettingsDialog
 import org.chordsoft.chezmoi.ui.layers.AdminLayer
 import org.chordsoft.chezmoi.ui.layers.CadastreLayer
 import org.chordsoft.chezmoi.ui.layers.CultureLayer
+import org.chordsoft.chezmoi.ui.layers.EducationLayer
 import org.chordsoft.chezmoi.ui.layers.ElectricityLayer
 import org.chordsoft.chezmoi.ui.layers.FactoriesLayer
 import org.chordsoft.chezmoi.ui.layers.GasLayer
@@ -107,7 +108,7 @@ fun MainScreen(
             "regions_admin", "regions_admin", "departements_admin", "arrondissements_admin", "arrondissements_municipal_admin",
             "communes_admin", "iris", "cadastre", "electricity", "permis_amenager", "permis_demolir", "permis_construire_non_residentiels",
             "permis_construire_residentiels", "rpls", "valeur_fonciere", "gas", "installations_industrielles", "culture",
-            "polluted_sites"
+            "polluted_sites", "education"
         ).associateWith { sourceName ->
             rememberVectorTileSource(
                 tiles = listOf(
@@ -201,6 +202,17 @@ fun MainScreen(
             sources = sources,
             mapViewModel = mapViewModel,
             settingsViewModel = settingsViewModel,
+        )
+
+        EducationLayer(
+            visible = markers.education,
+            mapState = mapState,
+            sources = sources,
+            mapViewModel = mapViewModel,
+            settingsViewModel = settingsViewModel,
+            onMarkerClick = {
+                showMarkerInfoDialog = true
+            }
         )
 
         LocationPuck(

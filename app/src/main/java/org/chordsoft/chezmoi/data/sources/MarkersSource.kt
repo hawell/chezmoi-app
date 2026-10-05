@@ -41,4 +41,5 @@ data class Markers(
     val factories: Boolean = false,
     val culture: Boolean = false,
     val pollution: Boolean = false,
+    val education:  Boolean = false,
 )

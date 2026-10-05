@@ -99,6 +99,12 @@ fun LayersSelectDialog(
     )
     val markerItems = listOf(
         SelectItem(
+            name = "Éducation",
+            icon = R.drawable.school_24px,
+            get = { markers.education },
+            set = { scope.launch { settingsViewModel.setMarkers(markers.copy(education = !markers.education))} }
+        ),
+        SelectItem(
             name = "Rpls",
             icon = R.drawable.shield_with_house_24px,
             get = { markers.rpls },

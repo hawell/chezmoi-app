@@ -31,6 +31,7 @@ class MapViewModel: ViewModel() {
         ValeurFonciere,
         Permis,
         PollutedSite,
+        Education,
     }
 
     data class MarkerInfoItem(
