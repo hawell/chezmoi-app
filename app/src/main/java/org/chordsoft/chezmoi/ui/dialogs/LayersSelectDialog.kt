@@ -122,6 +122,12 @@ fun LayersSelectDialog(
             get = { markers.culture },
             set = { scope.launch { settingsViewModel.setMarkers(markers.copy(culture = !markers.culture))} }
         ),
+        SelectItem(
+            name = "Santé",
+            icon = R.drawable.health_cross_24px,
+            get = { markers.health },
+            set = { scope.launch { settingsViewModel.setMarkers(markers.copy(health = !markers.health))} }
+        ),
     )
     val mapStyles = basicMapStyles.map { (name, style) ->
         SelectItem(

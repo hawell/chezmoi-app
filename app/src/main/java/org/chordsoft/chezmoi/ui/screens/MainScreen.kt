@@ -19,6 +19,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -40,6 +41,7 @@ import org.chordsoft.chezmoi.ui.layers.EducationLayer
 import org.chordsoft.chezmoi.ui.layers.ElectricityLayer
 import org.chordsoft.chezmoi.ui.layers.FactoriesLayer
 import org.chordsoft.chezmoi.ui.layers.GasLayer
+import org.chordsoft.chezmoi.ui.layers.HealthLayer
 import org.chordsoft.chezmoi.ui.layers.PermisLayer
 import org.chordsoft.chezmoi.ui.layers.PollutionLayer
 import org.chordsoft.chezmoi.ui.layers.RplsLayer
@@ -58,6 +60,8 @@ import org.maplibre.compose.map.CameraConstraints
 import org.maplibre.compose.map.LocalMapState
 import org.maplibre.compose.map.MaplibreMap
 import org.maplibre.compose.map.rememberMapState
+import org.maplibre.compose.overlay.CompassButton
+import org.maplibre.compose.overlay.CompassDefaults
 import org.maplibre.compose.overlay.ScaleBar
 import org.maplibre.compose.sources.rememberVectorTileSource
 import org.maplibre.compose.style.BaseStyle
@@ -108,7 +112,7 @@ fun MainScreen(
             "regions_admin", "regions_admin", "departements_admin", "arrondissements_admin", "arrondissements_municipal_admin",
             "communes_admin", "iris", "cadastre", "electricity", "permis_amenager", "permis_demolir", "permis_construire_non_residentiels",
             "permis_construire_residentiels", "rpls", "valeur_fonciere", "gas", "installations_industrielles", "culture",
-            "polluted_sites", "education"
+            "polluted_sites", "education", "health"
         ).associateWith { sourceName ->
             rememberVectorTileSource(
                 tiles = listOf(
@@ -215,6 +219,17 @@ fun MainScreen(
             }
         )
 
+        HealthLayer(
+            visible = markers.health,
+            mapState = mapState,
+            sources = sources,
+            mapViewModel = mapViewModel,
+            settingsViewModel = settingsViewModel,
+            onMarkerClick = {
+                showMarkerInfoDialog = true
+            }
+        )
+
         LocationPuck(
             idPrefix = "user",
             locationState = locationState,
@@ -263,6 +278,7 @@ fun MainScreen(
             state = mapState,
             cameraConstraints = CameraConstraints(boundingBox = franceBounds),
             overlay = {
+                val overlayScope = this
                 Surface(modifier = Modifier.align(Alignment.TopCenter)) {
                     Text(text = mapState.cameraPosition.zoom.toString())
                 }
@@ -275,12 +291,12 @@ fun MainScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-/*
-                    CompassButton(
-                        style = CompassDefaults.style()
-                            .copy(containerColor = Color.Gray.copy(alpha = 0.8f))
-                    )
-*/
+                    with(overlayScope) {
+                        CompassButton(
+                            style = CompassDefaults.style()
+                                .copy(containerColor = Color.Gray.copy(alpha = 0.8f))
+                        )
+                    }
                     OverlayButton(
                         icon = R.drawable.my_location_24px,
                         onClick = {

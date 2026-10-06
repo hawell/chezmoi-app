@@ -32,6 +32,7 @@ class MapViewModel: ViewModel() {
         Permis,
         PollutedSite,
         Education,
+        Health,
     }
 
     data class MarkerInfoItem(

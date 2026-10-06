@@ -42,6 +42,7 @@ fun MarkerInfoDialog(
             MapViewModel.MarkerType.ValeurFonciere -> Pair("Valeur Fonciere", R.drawable.euro_symbol_24px)
             MapViewModel.MarkerType.PollutedSite -> Pair("Sites pollués", R.drawable.dangerous_24px)
             MapViewModel.MarkerType.Education -> Pair("Éducation", R.drawable.school_24px)
+            MapViewModel.MarkerType.Health -> Pair("Santé", R.drawable.health_cross_24px)
             MapViewModel.MarkerType.Unknown -> Pair("Loading...", R.drawable.hourglass_top_24px)
         }
         Card(
